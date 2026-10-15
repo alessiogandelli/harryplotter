@@ -1,7 +1,10 @@
+import json
+
 from app.models.figure_spec import parse_figure_spec
 from app.providers.decisions import DecisionProvider
 from app.providers.fake import FakeProvider, choose_chart_type, explicit_chart_type
 from app.providers.router import pick
+from app.providers.structured import StructuredProvider
 
 DATASET = {
     "id": "ds-1",
@@ -129,6 +132,40 @@ def test_patch_without_chart_type_leaves_the_figure_untouched():
     result = FakeProvider().patch("put the legend on top", spec, RICH)
     assert "figure" not in result.patch
     assert result.spec.figure.chartType == "scatter"
+
+
+def _scatter_spec():
+    return parse_figure_spec(
+        {
+            "version": 1,
+            "figure": {"chartType": "scatter", "series": [{"x": "date", "y": "sentiment"}]},
+        }
+    )
+
+
+def test_patch_sets_x_axis_range_between():
+    result = FakeProvider().patch("limit the x axis between 0 and 10", _scatter_spec(), RICH)
+    assert result.patch["style"]["axes"]["x"]["range"] == [0, 10]
+
+
+def test_patch_sets_y_axis_range_from_to():
+    result = FakeProvider().patch("set the y range from -1 to 1", _scatter_spec(), RICH)
+    assert result.patch["style"]["axes"]["y"]["range"] == [-1, 1]
+
+
+def test_patch_sets_range_from_hyphen_span():
+    result = FakeProvider().patch("zoom x to 20-80", _scatter_spec(), RICH)
+    assert result.patch["style"]["axes"]["x"]["range"] == [20, 80]
+
+
+def test_structured_suggest_returns_the_prompt_text():
+    body = {"output_text": json.dumps({"prompt": "scatter of engagement over date"})}
+    provider = StructuredProvider(api_key="test", client=_FakeClient(body))
+
+    result = provider.suggest(RICH)
+
+    assert result.prompt == "scatter of engagement over date"
+    assert result.provider == "structured"
 
 
 class _FakeResponse:

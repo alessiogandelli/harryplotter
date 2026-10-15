@@ -157,6 +157,33 @@ describe('ApiClient', () => {
     expect(out.size).toBeGreaterThan(0);
   });
 
+  it('requests an AI-suggested prompt for a dataset', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ prompt: 'bar plot of score by group', provider: 'structured' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await client().suggestPrompt('d1');
+
+    expect(result.prompt).toBe('bar plot of score by group');
+    expect(result.provider).toBe('structured');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/ai/suggest');
+    expect(JSON.parse(init.body)).toEqual({ datasetId: 'd1' });
+  });
+
+  it('reads the AI status', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(jsonResponse({ llmAvailable: false, provider: 'structured' })),
+    );
+
+    const status = await client().aiStatus();
+
+    expect(status.llmAvailable).toBe(false);
+    expect(status.provider).toBe('structured');
+  });
+
   it('lists the dataset library through the envelope shape', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({

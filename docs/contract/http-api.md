@@ -93,6 +93,23 @@ Response `200`:
 ```
 The patch must be *partial*: fields not addressed by the prompt are preserved.
 
+### `GET /api/ai/status`
+```jsonc
+{ "llmAvailable": true, "provider": "structured" }
+```
+`llmAvailable` is `false` when no `OPENAI_API_KEY` is configured. The UI uses it
+to enable/disable the LLM-backed "Suggest" button.
+
+### `POST /api/ai/suggest`
+```jsonc
+{ "datasetId": "uuid" }
+```
+→ `{ "prompt": "bar plot of engagement by topic", "provider": "structured" }`
+
+Proposes one natural-language chart request for the dataset. Requires an LLM
+(free text is only produced by the Structured provider); without a key it
+responds `503 { "error": "llm_unavailable" }`.
+
 ## Versions
 
 ### `POST /api/projects`

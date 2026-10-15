@@ -37,6 +37,10 @@ class PatchRequest(BaseModel):
     prompt: str
 
 
+class SuggestRequest(BaseModel):
+    datasetId: str
+
+
 class ProjectRequest(BaseModel):
     name: str
 
@@ -154,6 +158,34 @@ def ai_patch(req: PatchRequest) -> Any:
     body = result.to_patch_response()
     body["belowThreshold"] = _below_threshold(result.confidence)
     return body
+
+
+@router.get("/ai/status")
+def ai_status() -> dict:
+    # Suggestions need free text, so they require a key and a Structured-capable
+    # mode (auto or structured).
+    available = bool(config.openai_api_key()) and config.provider_mode() in (
+        "auto",
+        "structured",
+    )
+    return {"llmAvailable": available, "provider": "structured"}
+
+
+@router.post("/ai/suggest")
+def ai_suggest(req: SuggestRequest) -> Any:
+    if not config.openai_api_key():
+        return _error(503, "llm_unavailable", "no API key configured for suggestions")
+    summary = db.dataset_summary(req.datasetId)
+    if summary is None:
+        return _error(404, "dataset_not_found", f"no dataset '{req.datasetId}'")
+    provider = build_provider()
+    try:
+        result = provider.suggest(summary)
+    except NotImplementedError:
+        return _error(503, "llm_unavailable", "the configured provider cannot suggest")
+    except RuntimeError as exc:
+        return _error(503, "provider_unavailable", str(exc))
+    return result.to_response()
 
 
 # --------------------------------------------------------------------------- #

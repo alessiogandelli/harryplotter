@@ -1,5 +1,8 @@
 import hashlib
 
+from app import main as main_module
+from app.providers.base import SuggestionResult
+
 
 def base_spec(**overrides) -> dict:
     spec = {
@@ -237,3 +240,38 @@ def test_api_key_never_appears_in_responses(client, uploaded, monkeypatch):
         json={"datasetId": uploaded["id"], "prompt": "scatter of score over time"},
     )
     assert "sk-secret-must-not-leak" not in response.text
+
+
+# --------------------------------------------------------------------------- #
+# AI suggestions
+# --------------------------------------------------------------------------- #
+
+class _StubProvider:
+    def suggest(self, dataset: dict) -> SuggestionResult:
+        return SuggestionResult(prompt="bar plot of score by group", provider="structured")
+
+
+def test_ai_status_reports_no_key(client):
+    assert client.get("/api/ai/status").json() == {
+        "llmAvailable": False,
+        "provider": "structured",
+    }
+
+
+def test_ai_suggest_is_unavailable_without_a_key(client, uploaded):
+    response = client.post("/api/ai/suggest", json={"datasetId": uploaded["id"]})
+    assert response.status_code == 503
+    assert response.json()["error"] == "llm_unavailable"
+
+
+def test_ai_suggest_returns_a_prompt_with_a_provider(client, uploaded, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(main_module, "build_provider", lambda: _StubProvider())
+
+    response = client.post("/api/ai/suggest", json={"datasetId": uploaded["id"]})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "prompt": "bar plot of score by group",
+        "provider": "structured",
+    }

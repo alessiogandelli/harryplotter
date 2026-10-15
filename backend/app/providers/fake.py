@@ -284,6 +284,20 @@ class FakeProvider(ChartProvider):
             elif re.search(r"show|on|\bwith\b", text):
                 axes[target]["grid"] = True
 
+        # Axis range: "limit the x axis between 0 and 10", "set the y range from
+        # -1 to 1", "zoom x to 20-80", or "clear the range".
+        if re.search(r"\brange\b|\blimit\b|\bzoom\b|\bbetween\b", text):
+            if "range" in words and re.search(r"clear|reset|remove|auto", text):
+                axes[target]["range"] = [None, None]
+            else:
+                span = re.search(
+                    r"(-?\d+(?:\.\d+)?)\s*(?:to|and|through|–|—|-)\s*(-?\d+(?:\.\d+)?)",
+                    text,
+                )
+                if span:
+                    low, high = float(span.group(1)), float(span.group(2))
+                    axes[target]["range"] = [min(low, high), max(low, high)]
+
         marker_match = re.search(r"marker size\s+([0-9]+(?:\.[0-9]+)?)", text)
         if marker_match:
             style["marker"] = {"size": float(marker_match.group(1))}

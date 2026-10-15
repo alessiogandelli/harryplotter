@@ -6,7 +6,7 @@ from typing import Optional
 
 from .. import config
 from ..models.figure_spec import FigureSpec
-from .base import ChartProvider, ProviderResult
+from .base import ChartProvider, ProviderResult, SuggestionResult
 from .decisions import DecisionProvider
 from .fake import FakeProvider
 from .router import pick
@@ -31,6 +31,10 @@ class RouterProvider(ChartProvider):
         if pick(prompt, dataset) == "novel":
             return self._structured.patch(prompt, spec, dataset)
         return self._decisions.patch(prompt, spec, dataset)
+
+    def suggest(self, dataset: dict) -> SuggestionResult:
+        # A written suggestion needs free text, which only Structured can emit.
+        return self._structured.suggest(dataset)
 
 
 def build_provider(name: Optional[str] = None) -> ChartProvider:

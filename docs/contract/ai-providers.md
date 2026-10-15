@@ -9,12 +9,20 @@ responses from `docs/contract/http-api.md`.
 ```text
 ChartProvider.generate(prompt, dataset) -> ProviderResult
 ChartProvider.patch(prompt, spec, dataset) -> ProviderResult
+ChartProvider.suggest(dataset) -> SuggestionResult
 ```
 
-where `dataset` is the dataset summary (columns, dtypes, stats, sample) and
+where `dataset` is the dataset summary (columns, dtypes, stats, sample),
 `ProviderResult` is `{ "spec", "provider", "confidence" }` for `generate` and
 `{ "spec", "patch", "provider", "confidence" }` for `patch` (the `spec` is the
-current spec with `patch` already applied).
+current spec with `patch` already applied), and `SuggestionResult` is
+`{ "prompt", "provider" }`.
+
+`suggest` proposes one natural-language chart request for the dataset. It needs
+free-text generation, so only `StructuredProvider` implements it; the router
+always sends `suggest` to the Structured provider, and `DecisionProvider` / the
+fake provider do not implement it (the endpoint reports `llm_unavailable` when
+no key is configured).
 
 ## Implementations
 

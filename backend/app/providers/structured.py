@@ -14,10 +14,17 @@ import httpx
 
 from .. import config
 from ..models.figure_spec import FigureSpec, parse_figure_spec
-from .base import ChartProvider, ProviderResult
+from .base import ChartProvider, ProviderResult, SuggestionResult
 from .schema import dataset_context
 
 MODEL = "gpt-6-luna"
+
+SUGGEST_SCHEMA = {
+    "type": "object",
+    "properties": {"prompt": {"type": "string"}},
+    "required": ["prompt"],
+    "additionalProperties": False,
+}
 
 PATCH_SCHEMA = {
     "type": "object",
@@ -45,14 +52,14 @@ class StructuredProvider(ChartProvider):
         self._base_url = (base_url or config.openai_base_url()).rstrip("/")
         self._client = client
 
-    def _respond(self, prompt: str, schema: dict) -> dict:
+    def _respond(self, prompt: str, schema: dict, name: str = "figurelab_output") -> dict:
         payload = {
             "model": MODEL,
             "input": prompt,
             "text": {
                 "format": {
                     "type": "json_schema",
-                    "name": "figurelab_output",
+                    "name": name,
                     "schema": schema,
                     "strict": True,
                 }
@@ -115,4 +122,17 @@ class StructuredProvider(ChartProvider):
         new_spec = parse_figure_spec(merged)
         return ProviderResult(
             spec=new_spec, provider=self.name, confidence=None, patch=payload
+        )
+
+    def suggest(self, dataset: dict) -> SuggestionResult:
+        instruction = (
+            "You help a researcher choose a figure for their data. Given the "
+            "dataset summary below, propose ONE short natural-language request "
+            "for a useful chart, naming exact column names from the dataset. "
+            "Vary the chart type and the columns across requests.\n"
+            f"Dataset summary: {dataset_context(dataset)}"
+        )
+        payload = self._respond(instruction, SUGGEST_SCHEMA, name="figurelab_suggestion")
+        return SuggestionResult(
+            prompt=str(payload.get("prompt", "")).strip(), provider=self.name
         )

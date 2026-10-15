@@ -9,6 +9,15 @@ from ..models.figure_spec import FigureSpec
 
 
 @dataclass
+class SuggestionResult:
+    prompt: str
+    provider: str
+
+    def to_response(self) -> dict:
+        return {"prompt": self.prompt, "provider": self.provider}
+
+
+@dataclass
 class ProviderResult:
     spec: FigureSpec
     provider: str
@@ -43,4 +52,12 @@ class ChartProvider:
         raise NotImplementedError
 
     def patch(self, prompt: str, spec: FigureSpec, dataset: dict) -> ProviderResult:
+        raise NotImplementedError
+
+    def suggest(self, dataset: dict) -> SuggestionResult:
+        """Propose one natural-language chart request for the dataset.
+
+        Only free-text-capable providers (Structured Outputs) implement this;
+        the Decisions and fake providers do not.
+        """
         raise NotImplementedError

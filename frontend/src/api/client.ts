@@ -1,5 +1,6 @@
 import type { FigureSpec } from '../types/figureSpec';
 import type {
+  AiStatus,
   DatasetListItem,
   DatasetSummary,
   ExportFormat,
@@ -8,6 +9,7 @@ import type {
   PatchResponse,
   Project,
   RenderResponse,
+  SuggestResponse,
   ValidationIssue,
   Version,
 } from '../types/api';
@@ -106,6 +108,18 @@ export class ApiClient {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ datasetId, spec }),
+    });
+  }
+
+  async aiStatus(): Promise<AiStatus> {
+    return this.json<AiStatus>('/ai/status');
+  }
+
+  async suggestPrompt(datasetId: string): Promise<SuggestResponse> {
+    return this.json<SuggestResponse>('/ai/suggest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ datasetId }),
     });
   }
 

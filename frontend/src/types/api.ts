@@ -63,6 +63,16 @@ export interface PatchResponse {
   belowThreshold: boolean;
 }
 
+export interface AiStatus {
+  llmAvailable: boolean;
+  provider: string;
+}
+
+export interface SuggestResponse {
+  prompt: string;
+  provider: string;
+}
+
 export interface RenderResponse {
   figure: {
     data: Array<Record<string, unknown>>;
