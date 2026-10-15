@@ -1,0 +1,35 @@
+# scratch / tmp
+tmp/
+.scratch/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# node
+node_modules/
+dist/
+.vite/
+coverage/
+
+# data & artifacts
+data/
+artifacts/
+*.sqlite
+*.db
+
+# env
+.env
+.env.*
+!.env.example
+
+# os
+.DS_Store
