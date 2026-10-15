@@ -157,6 +157,31 @@ describe('ApiClient', () => {
     expect(out.size).toBeGreaterThan(0);
   });
 
+  it('lists the dataset library through the envelope shape', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        datasets: [
+          {
+            id: 'd1',
+            filename: 'demo.csv',
+            rows: 600,
+            columnCount: 8,
+            contentHash: 'sha256:h',
+            kind: 'sample',
+            createdAt: '2026-01-01T00:00:00Z',
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const datasets = await client().listDatasets();
+
+    expect(datasets).toHaveLength(1);
+    expect(datasets[0].kind).toBe('sample');
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/datasets');
+  });
+
   it('lists projects through the envelope shape', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ projects: [{ id: 'p1', name: 'P', createdAt: '2026-01-01T00:00:00Z' }] }),

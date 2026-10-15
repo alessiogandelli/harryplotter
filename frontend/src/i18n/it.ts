@@ -29,6 +29,9 @@ const it = {
     min: 'Min',
     max: 'Max',
     sample: 'Campione',
+    library: 'Dataset',
+    libraryEmpty: 'Nessun dataset. Caricane uno qui sopra o scegli un campione.',
+    sampleBadge: 'Campione',
     dtype: {
       numeric: 'numerico',
       categorical: 'categorico',

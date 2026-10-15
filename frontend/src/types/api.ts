@@ -19,15 +19,29 @@ export interface NumericStats {
   max: number;
 }
 
+export type DatasetKind = 'upload' | 'sample';
+
 export interface DatasetSummary {
   id: string;
   filename: string;
   rows: number;
   contentHash: string;
+  kind?: DatasetKind;
   columns: DatasetColumn[];
   /** Present only for numeric columns. */
   stats: Record<string, NumericStats>;
   sample: Array<Record<string, unknown>>;
+}
+
+/** One entry in the dataset library (`GET /api/datasets`). */
+export interface DatasetListItem {
+  id: string;
+  filename: string;
+  rows: number;
+  columnCount: number;
+  contentHash: string;
+  kind: DatasetKind;
+  createdAt: string;
 }
 
 export type ProviderName = 'decisions' | 'structured' | 'fake';

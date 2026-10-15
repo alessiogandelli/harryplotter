@@ -1,5 +1,6 @@
 import type { FigureSpec } from '../types/figureSpec';
 import type {
+  DatasetListItem,
   DatasetSummary,
   ExportFormat,
   ExportRequest,
@@ -89,6 +90,11 @@ export class ApiClient {
     const form = new FormData();
     form.append('file', file);
     return this.json<DatasetSummary>('/datasets', { method: 'POST', body: form });
+  }
+
+  async listDatasets(): Promise<DatasetListItem[]> {
+    const body = await this.json<{ datasets: DatasetListItem[] }>('/datasets');
+    return body.datasets;
   }
 
   async getDataset(id: string): Promise<DatasetSummary> {

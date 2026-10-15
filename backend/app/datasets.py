@@ -122,7 +122,7 @@ def summarize(df: pd.DataFrame, dataset_id: str, filename: str, hash_value: str)
     }
 
 
-def ingest(filename: str, data: bytes) -> dict:
+def ingest(filename: str, data: bytes, kind: str = "upload") -> dict:
     """Persist an uploaded file and its summary; return the API response."""
     if not data:
         raise DatasetError("empty_file", "uploaded file is empty")
@@ -152,5 +152,31 @@ def ingest(filename: str, data: bytes) -> dict:
         columns=summary["columns"],
         stats=summary["stats"],
         sample=summary["sample"],
+        kind=kind,
     )
+    summary["kind"] = kind
     return summary
+
+
+def seed_samples() -> list[str]:
+    """Ingest bundled sample files that are not yet in the library.
+
+    Idempotent: a file whose content hash already exists is skipped, so this can
+    run on every boot without duplicating rows.
+    """
+    directory = config.samples_dir()
+    if not directory.is_dir():
+        return []
+    added: list[str] = []
+    for path in sorted(directory.iterdir()):
+        if not path.is_file() or path.suffix.lower() not in ALLOWED_EXTENSIONS:
+            continue
+        data = path.read_bytes()
+        if not data or db.find_dataset_by_content_hash(content_hash(data)) is not None:
+            continue
+        try:
+            summary = ingest(path.name, data, kind="sample")
+        except DatasetError:
+            continue
+        added.append(summary["id"])
+    return added

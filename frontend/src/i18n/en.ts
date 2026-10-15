@@ -29,6 +29,9 @@ const en = {
     min: 'Min',
     max: 'Max',
     sample: 'Sample',
+    library: 'Datasets',
+    libraryEmpty: 'No datasets yet — upload one above or pick a bundled sample.',
+    sampleBadge: 'Sample',
     dtype: {
       numeric: 'numeric',
       categorical: 'categorical',

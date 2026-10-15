@@ -57,7 +57,16 @@ variables always win over both. `.env` is gitignored.
 | `FIGURELAB_CONFIDENCE_THRESHOLD` | `0.5` | Results below this are flagged to the UI (`belowThreshold`). |
 | `FIGURELAB_DATA_DIR` | `backend/data` | Where datasets and the SQLite file live. |
 | `FIGURELAB_DB_PATH` | `<data>/figurelab.sqlite` | SQLite metadata store. |
+| `FIGURELAB_SAMPLES_DIR` | `<repo>/samples` | Bundled samples seeded into the library on boot. |
 | `OPENAI_BASE_URL` | `https://api.openai.com` | Override for testing against a mock. |
+
+## Dataset library
+
+Every upload is persisted (file under `FIGURELAB_DATA_DIR/datasets`, metadata in
+SQLite) and returned by `GET /api/datasets`, so datasets survive restarts and can
+be reopened. On startup the backend also seeds the CSV/Excel files in
+`FIGURELAB_SAMPLES_DIR` (default `samples/`), tagged `kind: "sample"`. Seeding is
+idempotent: a file whose content hash is already in the library is skipped.
 
 ## Layout
 

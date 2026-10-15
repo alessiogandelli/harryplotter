@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS datasets (
     columns_json TEXT NOT NULL,
     stats_json TEXT NOT NULL,
     sample_json TEXT NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'upload',
     created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS projects (
@@ -47,6 +48,12 @@ def _connect() -> sqlite3.Connection:
 def init_db() -> None:
     with _connect() as conn:
         conn.executescript(_SCHEMA)
+        # Lightweight migration for databases created before `kind` existed.
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(datasets)")}
+        if "kind" not in columns:
+            conn.execute(
+                "ALTER TABLE datasets ADD COLUMN kind TEXT NOT NULL DEFAULT 'upload'"
+            )
 
 
 def _now() -> str:
@@ -67,12 +74,13 @@ def insert_dataset(
     columns: list[dict],
     stats: dict,
     sample: list[dict],
+    kind: str = "upload",
 ) -> dict:
     with _connect() as conn:
         conn.execute(
             "INSERT INTO datasets "
-            "(id, filename, path, rows, content_hash, columns_json, stats_json, sample_json, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "(id, filename, path, rows, content_hash, columns_json, stats_json, sample_json, kind, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 id,
                 filename,
@@ -82,10 +90,40 @@ def insert_dataset(
                 json.dumps(columns),
                 json.dumps(stats),
                 json.dumps(sample),
+                kind,
                 _now(),
             ),
         )
     return get_dataset(id)  # type: ignore[return-value]
+
+
+def find_dataset_by_content_hash(hash_value: str) -> Optional[dict]:
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM datasets WHERE content_hash = ?", (hash_value,)
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def list_datasets() -> list[dict]:
+    """Newest first, the library view. Lightweight (no sample rows)."""
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT id, filename, rows, columns_json, content_hash, kind, created_at "
+            "FROM datasets ORDER BY created_at DESC"
+        ).fetchall()
+    return [
+        {
+            "id": row["id"],
+            "filename": row["filename"],
+            "rows": row["rows"],
+            "columnCount": len(json.loads(row["columns_json"])),
+            "contentHash": row["content_hash"],
+            "kind": row["kind"],
+            "createdAt": row["created_at"],
+        }
+        for row in rows
+    ]
 
 
 def get_dataset_row(id: str) -> Optional[dict]:
@@ -107,6 +145,7 @@ def _dataset_response(row: dict) -> dict:
         "filename": row["filename"],
         "rows": row["rows"],
         "contentHash": row["content_hash"],
+        "kind": row["kind"],
         "columns": json.loads(row["columns_json"]),
         "stats": json.loads(row["stats_json"]),
         "sample": json.loads(row["sample_json"]),

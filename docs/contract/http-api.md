@@ -14,6 +14,7 @@ Response `200`:
   "filename": "dataset.csv",
   "rows": 12450,
   "contentHash": "sha256:...",
+  "kind": "upload",
   "columns": [
     { "name": "time",  "dtype": "numeric",  "missing": 0 },
     { "name": "score", "dtype": "numeric",  "missing": 12 },
@@ -27,6 +28,20 @@ Response `200`:
 ```
 `dtype` is one of `numeric | categorical | datetime | boolean`. `stats` is
 present only for numeric columns. `sample` is at most 20 rows.
+
+### `GET /api/datasets`
+The dataset library, newest first. Bundled samples from the `samples/` directory
+are seeded here on startup (tagged `kind: "sample"`); uploads persist and appear
+here too (`kind: "upload"`).
+```jsonc
+{
+  "datasets": [
+    { "id": "uuid", "filename": "dataset.csv", "rows": 600,
+      "columnCount": 8, "contentHash": "sha256:...",
+      "kind": "upload", "createdAt": "2026-..." }
+  ]
+}
+```
 
 ### `GET /api/datasets/{id}`
 Same response as upload, without re-uploading.

@@ -1,7 +1,8 @@
-import { useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 import { useFigureStore } from '../store/figureStore';
+import type { DatasetListItem } from '../types/api';
 
 export function DataPanel() {
   const { t } = useTranslation();
@@ -9,7 +10,21 @@ export function DataPanel() {
   const loadDataset = useFigureStore((state) => state.loadDataset);
 
   const [uploading, setUploading] = useState(false);
+  const [opening, setOpening] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [library, setLibrary] = useState<DatasetListItem[]>([]);
+
+  const refresh = useCallback(async () => {
+    try {
+      setLibrary(await api.listDatasets());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   const onFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -20,10 +35,24 @@ export function DataPanel() {
     try {
       const summary = await api.uploadDataset(file);
       loadDataset(summary);
+      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setUploading(false);
+    }
+  };
+
+  const open = async (item: DatasetListItem) => {
+    if (item.id === dataset?.id) return;
+    setOpening(item.id);
+    setError(null);
+    try {
+      loadDataset(await api.getDataset(item.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setOpening(null);
     }
   };
 
@@ -32,12 +61,51 @@ export function DataPanel() {
       <h2>{t('data.title')}</h2>
 
       <label className="upload">
-        <span className="upload-button">{uploading ? t('data.loading') : t('data.upload')}</span>
+        <span className="upload-button">
+          {uploading ? t('data.loading') : t('data.upload')}
+        </span>
         <span className="upload-hint">{t('data.uploadHint')}</span>
-        <input type="file" accept=".csv,.xlsx,.xls" onChange={onFile} disabled={uploading} hidden />
+        <input
+          type="file"
+          accept=".csv,.xlsx,.xls"
+          onChange={onFile}
+          disabled={uploading}
+          hidden
+        />
       </label>
 
       {error && <p className="error">{error}</p>}
+
+      <div className="library">
+        <h3>{t('data.library')}</h3>
+        {library.length === 0 ? (
+          <p className="muted">{t('data.libraryEmpty')}</p>
+        ) : (
+          <ul className="library-list">
+            {library.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  className={`library-item${dataset?.id === item.id ? ' active' : ''}`}
+                  onClick={() => void open(item)}
+                  disabled={opening !== null}
+                >
+                  <span className="library-name">
+                    {item.filename}
+                    {item.kind === 'sample' && (
+                      <em className="badge">{t('data.sampleBadge')}</em>
+                    )}
+                  </span>
+                  <span className="library-meta">
+                    {item.rows.toLocaleString()} {t('data.rows').toLowerCase()} ·{' '}
+                    {item.columnCount} {t('data.columns').toLowerCase()}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {!dataset ? (
         <p className="muted">{t('data.noDataset')}</p>

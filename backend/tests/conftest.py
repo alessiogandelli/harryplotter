@@ -23,6 +23,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("FIGURELAB_DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("FIGURELAB_DB_PATH", str(tmp_path / "figurelab.sqlite"))
     monkeypatch.setenv("FIGURELAB_PROVIDER", "fake")
+    monkeypatch.setenv("FIGURELAB_SAMPLES_DIR", str(tmp_path / "no-samples"))
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     app = create_app()
     with TestClient(app) as test_client:

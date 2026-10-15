@@ -95,6 +95,11 @@ async def upload_dataset(file: UploadFile = File(...)) -> Any:
         return _error(400, exc.code, exc.message)
 
 
+@router.get("/datasets")
+def list_datasets() -> dict:
+    return {"datasets": db.list_datasets()}
+
+
 @router.get("/datasets/{dataset_id}")
 def get_dataset(dataset_id: str) -> Any:
     dataset = db.get_dataset(dataset_id)
@@ -243,6 +248,7 @@ def create_app() -> FastAPI:
     async def lifespan(_: FastAPI):
         config.ensure_dirs()
         db.init_db()
+        datasets.seed_samples()
         yield
 
     app = FastAPI(title="FigureLab", version="0.1.0", lifespan=lifespan)

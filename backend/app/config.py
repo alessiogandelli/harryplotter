@@ -40,6 +40,13 @@ def datasets_dir() -> Path:
     return data_dir() / "datasets"
 
 
+def samples_dir() -> Path:
+    """Directory of bundled sample datasets, seeded into the library on boot."""
+    return Path(
+        os.environ.get("FIGURELAB_SAMPLES_DIR", str(BACKEND_ROOT.parent / "samples"))
+    )
+
+
 def db_path() -> Path:
     return Path(os.environ.get("FIGURELAB_DB_PATH", str(data_dir() / "figurelab.sqlite")))
 
