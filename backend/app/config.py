@@ -1,7 +1,9 @@
 """Runtime configuration, read from the environment on each access.
 
-Reading dynamically (rather than caching at import time) lets tests point the
-service at a temporary data directory and switch providers without reloading.
+Values are read dynamically (rather than cached at import time) so tests can
+point the service at a temporary data directory and switch providers without
+reloading. Secrets such as ``OPENAI_API_KEY`` may be supplied either as real
+environment variables or in a ``.env`` file; the real environment always wins.
 """
 
 from __future__ import annotations
@@ -9,9 +11,25 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
 
+# Looked up in order; the first file to define a variable wins, and any variable
+# already present in the real environment is never overwritten.
+ENV_FILES = [BACKEND_ROOT / ".env", BACKEND_ROOT.parent / ".env"]
+
 VALID_PROVIDER_MODES = {"auto", "fake", "decisions", "structured"}
+
+
+def load_env_files(paths: list[Path] | None = None) -> None:
+    """Populate ``os.environ`` from ``.env`` files (without overriding it)."""
+    for path in paths or ENV_FILES:
+        if path.is_file():
+            load_dotenv(path, override=False)
+
+
+load_env_files()
 
 
 def data_dir() -> Path:

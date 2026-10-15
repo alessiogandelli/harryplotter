@@ -45,6 +45,11 @@ Tests never touch the network: they run with `FIGURELAB_PROVIDER=fake`.
 
 ## Configuration
 
+Settings come from environment variables. Instead of exporting them, copy
+`../.env.example` to `../.env` (or `backend/.env`) and fill it in: the backend
+loads `backend/.env` first, then the repo-root `.env`, and real environment
+variables always win over both. `.env` is gitignored.
+
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `FIGURELAB_PROVIDER` | `auto` | `auto` \| `fake` \| `decisions` \| `structured`. `auto` is `fake` when no key is set, otherwise the router picks per request. |
