@@ -222,6 +222,64 @@ export function defaultStyle(): StyleSpec {
   };
 }
 
+/** Minimal column shape needed to choose sensible defaults. */
+export interface ColumnLike {
+  name: string;
+  dtype: string;
+}
+
+/**
+ * Whether every required column mapping for the current chart type is present.
+ * Used to skip the render call while the spec is still incomplete, so the user
+ * sees the empty hint instead of validation errors.
+ */
+export function isRenderable(spec: FigureSpec): boolean {
+  if (spec.figure.series.length === 0) return false;
+  const req = CHART_TYPE_MATRIX[spec.figure.chartType];
+  return spec.figure.series.every((series) => {
+    if (req.x === 'req' && !series.x) return false;
+    if (req.y === 'req' && !series.y) return false;
+    if (req.color === 'req' && !series.color) return false;
+    return true;
+  });
+}
+
+/**
+ * Fill the first series' column mapping from the dataset when it is still
+ * empty, so a freshly loaded dataset renders something immediately. Existing
+ * choices are never overwritten.
+ */
+export function applyDatasetColumns(spec: FigureSpec, columns: ColumnLike[]): FigureSpec {
+  const series = spec.figure.series[0];
+  if (!series || series.x || series.y) return spec;
+
+  const names = (dtype: string) =>
+    columns.filter((column) => column.dtype === dtype).map((column) => column.name);
+  const numeric = names('numeric');
+  const categorical = [...names('categorical'), ...names('boolean')];
+  const datetime = names('datetime');
+  const all = columns.map((column) => column.name);
+
+  const x = datetime[0] ?? numeric[0] ?? all[0] ?? null;
+  const y = numeric.find((name) => name !== x) ?? numeric[0] ?? all[1] ?? null;
+
+  const next = structuredClone(spec);
+  next.figure.series[0] = {
+    ...next.figure.series[0],
+    x,
+    y,
+  };
+  const req = CHART_TYPE_MATRIX[next.figure.chartType];
+  const color = categorical.find((name) => name !== x && name !== y);
+  if (req.color === 'opt' && color) {
+    next.figure.series[0].color = color;
+  }
+  if (!next.style.title && x && y) {
+    next.style.title = `${y} over ${x}`;
+  }
+  return next;
+}
+
 /** Canonical defaults for a brand-new spec. */
 export function defaultSpec(
   dataset: DatasetRef = { id: '', contentHash: '' },

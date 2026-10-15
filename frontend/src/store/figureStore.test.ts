@@ -100,6 +100,29 @@ describe('figure store history', () => {
     expect(useFigureStore.getState().spec.style.title).toBe('AI');
   });
 
+  it('loadDataset fills sensible x/y/colour so it renders immediately', () => {
+    const dataset: DatasetSummary = {
+      id: 'd2',
+      filename: 'demo.csv',
+      rows: 600,
+      contentHash: 'sha256:z',
+      columns: [
+        { name: 'date', dtype: 'datetime', missing: 0 },
+        { name: 'group', dtype: 'categorical', missing: 0 },
+        { name: 'score', dtype: 'numeric', missing: 0 },
+      ],
+      stats: {},
+      sample: [],
+    };
+
+    useFigureStore.getState().loadDataset(dataset);
+    const series = useFigureStore.getState().spec.figure.series[0];
+
+    expect(series.x).toBe('date');
+    expect(series.y).toBe('score');
+    expect(series.color).toBe('group');
+  });
+
   it('restore resets history to a single entry', () => {
     useFigureStore.getState().apply((spec) => setTitle(spec, 'temp'));
     const saved = defaultSpec({ id: 'd9', contentHash: 'h' });

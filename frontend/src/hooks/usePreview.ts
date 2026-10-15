@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, ApiError, ApiValidationError } from '../api/client';
+import { isRenderable } from '../types/figureSpec';
 import type { FigureSpec } from '../types/figureSpec';
 import type { ValidationIssue } from '../types/api';
 
@@ -30,7 +31,7 @@ export function usePreview(datasetId: string | null, spec: FigureSpec): PreviewR
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!datasetId) {
+    if (!datasetId || !isRenderable(spec)) {
       setFigure(null);
       setIssues([]);
       setError(null);

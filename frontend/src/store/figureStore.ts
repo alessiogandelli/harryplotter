@@ -7,7 +7,7 @@
  */
 import { create } from 'zustand';
 import type { FigureSpec } from '../types/figureSpec';
-import { defaultSpec } from '../types/figureSpec';
+import { applyDatasetColumns, defaultSpec } from '../types/figureSpec';
 import type { DatasetSummary, GenerateResponse, PatchResponse } from '../types/api';
 
 /** Maximum number of undo steps retained. */
@@ -104,8 +104,10 @@ export const useFigureStore = create<FigureStoreState>((set) => ({
 
   loadDataset: (dataset) =>
     set((state) => {
-      const spec = structuredClone(state.spec);
-      spec.dataset = { id: dataset.id, contentHash: dataset.contentHash };
+      const bound = structuredClone(state.spec);
+      bound.dataset = { id: dataset.id, contentHash: dataset.contentHash };
+      // Fill a sensible x/y/colour the first time so the dataset renders at once.
+      const spec = applyDatasetColumns(bound, dataset.columns);
       return { dataset, datasetId: dataset.id, spec, past: [], future: [] };
     }),
 
