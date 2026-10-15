@@ -108,7 +108,8 @@ export const useFigureStore = create<FigureStoreState>((set) => ({
       bound.dataset = { id: dataset.id, contentHash: dataset.contentHash };
       // Fill a sensible x/y/colour the first time so the dataset renders at once.
       const spec = applyDatasetColumns(bound, dataset.columns);
-      return { dataset, datasetId: dataset.id, spec, past: [], future: [] };
+      // A new dataset resets the AI state, so the next prompt generates afresh.
+      return { dataset, datasetId: dataset.id, spec, past: [], future: [], ai: null };
     }),
 
   setDataset: (dataset) => set({ dataset, datasetId: dataset?.id ?? null }),

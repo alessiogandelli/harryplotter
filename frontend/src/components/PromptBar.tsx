@@ -14,8 +14,8 @@ export function PromptBar() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isRefinement =
-    ai !== null || spec.figure.series.some((series) => series.x !== null || series.y !== null);
+  // The first AI request builds a figure; once one exists, requests refine it.
+  const isRefinement = ai !== null;
 
   const lowConfidence = ai !== null && ai.belowThreshold;
 

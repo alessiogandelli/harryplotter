@@ -1,4 +1,10 @@
-"""Deterministic, network-free provider used by tests and as the default."""
+"""Deterministic, network-free provider used by tests and as the default.
+
+It reads the prompt for an explicit chart type and for dataset column names so a
+request like "bar plot of engagement by topic" maps onto the right columns. This
+keeps the keyless demo genuinely usable; the real providers do the same job with
+a model.
+"""
 
 from __future__ import annotations
 
@@ -17,28 +23,60 @@ _WORD_NUMBERS = {
     "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6,
 }
 
+_EXPLICIT_CHARTS = [
+    ("scatter", "scatter"),
+    ("scatterplot", "scatter"),
+    ("line", "line"),
+    ("bar", "bar"),
+    ("histogram", "histogram"),
+    ("hist", "histogram"),
+    ("box", "box"),
+    ("violin", "violin"),
+    ("heatmap", "heatmap"),
+    ("heat map", "heatmap"),
+    ("area", "area"),
+]
+
+
+def explicit_chart_type(text: str) -> str | None:
+    """The chart type named in the text, or None if none is mentioned."""
+    lowered = text.lower()
+    for keyword, chart in _EXPLICIT_CHARTS:
+        if keyword in lowered:
+            return chart
+    return None
+
 
 def choose_chart_type(prompt: str) -> str:
+    explicit = explicit_chart_type(prompt)
+    if explicit:
+        return explicit
     text = prompt.lower()
-    explicit = [
-        ("scatter", "scatter"),
-        ("line", "line"),
-        ("bar", "bar"),
-        ("box", "box"),
-        ("violin", "violin"),
-        ("histogram", "histogram"),
-        ("heatmap", "heatmap"),
-        ("heat map", "heatmap"),
-        ("area", "area"),
-    ]
-    for keyword, chart in explicit:
-        if keyword in text:
-            return chart
     if "trend" in text or "over time" in text:
         return "line"
-    if "distribution" in text:
+    if "distribution" in text or "spread" in text:
         return "box"
     return "scatter"
+
+
+def _mentioned(lower: str, names: list[str]) -> list[str]:
+    """Names appearing in the prompt, in prompt order of first appearance."""
+    hits: list[tuple[int, str]] = []
+    for name in names:
+        for variant in {name.lower(), name.lower().replace("_", " ")}:
+            position = lower.find(variant)
+            if position != -1:
+                hits.append((position, name))
+                break
+    return [name for _, name in sorted(hits)]
+
+
+def _after(text: str, separator: str) -> str:
+    return text.split(separator, 1)[1] if separator in text else ""
+
+
+def _before(text: str, separator: str) -> str:
+    return text.split(separator, 1)[0] if separator in text else text
 
 
 def choose_columns(
@@ -47,28 +85,72 @@ def choose_columns(
     categorical: list[str],
     datetime_cols: list[str],
     all_cols: list[str],
+    prompt: str = "",
 ) -> tuple[str | None, str | None, str | None]:
+    text = prompt.lower()
+
+    # "measure by group" / "measure over axis" phrasing.
+    by_group = _mentioned(_after(text, " by "), all_cols)
+    over_axis = _mentioned(_after(text, " over "), all_cols)
+    measure = (
+        _mentioned(_before(text, " by "), numeric)
+        or _mentioned(_before(text, " over "), numeric)
+        or _mentioned(_after(text, " of "), numeric)
+        or _mentioned(text, numeric)
+    )
+    cat_match = _mentioned(text, categorical)
+    dt_match = _mentioned(text, datetime_cols)
+
     def first(seq):
         return seq[0] if seq else None
 
+    def next_measure(exclude):
+        return next((c for c in (measure or numeric) if c != exclude), None)
+
     x = y = color = None
     if chart == "histogram":
-        x = first(numeric) or first(all_cols)
+        x = first(measure) or first(numeric) or first(all_cols)
     elif chart in ("box", "violin"):
-        y = first(numeric) or first(all_cols)
-        x = first(categorical)
+        y = first(measure) or first(numeric) or first(all_cols)
+        x = first(by_group) or first(cat_match) or first(categorical)
     elif chart == "bar":
-        x = first(categorical) or first(datetime_cols) or first(numeric) or first(all_cols)
-        y = next((c for c in numeric if c != x), first(numeric))
+        x = (
+            first(by_group)
+            or first(cat_match)
+            or first(dt_match)
+            or first(categorical)
+            or first(datetime_cols)
+            or first(numeric)
+            or first(all_cols)
+        )
+        y = first(measure) or next_measure(x) or first(numeric)
     elif chart == "heatmap":
-        x = first(datetime_cols) or first(numeric) or first(all_cols)
-        y = next((c for c in numeric if c != x), first(numeric))
+        x = (
+            first(over_axis)
+            or first(by_group)
+            or first(dt_match)
+            or first(cat_match)
+            or first(all_cols)
+        )
+        y = first(measure) or next_measure(x) or first(numeric)
     else:  # scatter, line, area
-        x = first(datetime_cols) or first(numeric) or first(all_cols)
-        y = next((c for c in numeric if c != x), first(numeric) or first(all_cols))
+        nums = _mentioned(text, numeric)
+        if over_axis:
+            x = first(over_axis)
+            y = first(measure) or next_measure(x) or first(numeric)
+        elif len(nums) >= 2:
+            x, y = nums[1], nums[0]
+        elif by_group:
+            x = first(dt_match) or next_measure(first(measure)) or first(all_cols)
+            y = first(measure) or first(numeric)
+        else:
+            x = first(dt_match) or first(numeric) or first(all_cols)
+            y = first(measure) or next_measure(x) or first(numeric)
 
-    if chart != "heatmap":
-        color = first(categorical)
+    if chart in ("bar", "box", "violin", "histogram", "heatmap"):
+        color = None
+    else:
+        color = next((c for c in categorical if c not in (x, y)), None)
     return x, y, color
 
 
@@ -82,7 +164,9 @@ class FakeProvider(ChartProvider):
         all_cols = column_names(dataset)
 
         chart = choose_chart_type(prompt)
-        x, y, color = choose_columns(chart, numeric, categorical, datetime_cols, all_cols)
+        x, y, color = choose_columns(
+            chart, numeric, categorical, datetime_cols, all_cols, prompt
+        )
 
         series: dict = {}
         if x is not None:
@@ -114,7 +198,7 @@ class FakeProvider(ChartProvider):
 
     def patch(self, prompt: str, spec: FigureSpec, dataset: dict) -> ProviderResult:
         current = dump_figure_spec(spec)
-        partial = self._build_patch(prompt, current)
+        partial = self._build_patch(prompt, current, dataset)
         merged = apply_patch(current, partial)
         new_spec = parse_figure_spec(merged)
         return ProviderResult(
@@ -125,12 +209,33 @@ class FakeProvider(ChartProvider):
         )
 
     @staticmethod
-    def _build_patch(prompt: str, current: dict) -> dict:
+    def _build_patch(prompt: str, current: dict, dataset: dict) -> dict:
         text = prompt.lower()
         words = re.findall(r"[a-z0-9]+", text)
+        figure: dict = {}
         style: dict = {}
         legend: dict = {}
         axes: dict = {"x": {}, "y": {}}
+
+        # Changing the chart type (a refinement can do this too).
+        new_chart = explicit_chart_type(text)
+        current_chart = current.get("figure", {}).get("chartType")
+        if new_chart and new_chart != current_chart:
+            numeric = column_names(dataset, "numeric")
+            categorical = column_names(dataset, "categorical") + column_names(dataset, "boolean")
+            datetime_cols = column_names(dataset, "datetime")
+            all_cols = column_names(dataset)
+            x, y, color = choose_columns(
+                new_chart, numeric, categorical, datetime_cols, all_cols, prompt
+            )
+            series: dict = {}
+            if x is not None:
+                series["x"] = x
+            if y is not None:
+                series["y"] = y
+            if color is not None:
+                series["color"] = color
+            figure = {"chartType": new_chart, "series": [series]}
 
         if "legend" in words or "key" in words:
             for where in ("top", "bottom", "left", "right"):
@@ -140,7 +245,9 @@ class FakeProvider(ChartProvider):
                 legend["orientation"] = "h"
             if "vertical" in words:
                 legend["orientation"] = "v"
-            match = re.search(r"(one|two|three|four|five|six|\d+)\s+(rows|columns|columns?)", text)
+            match = re.search(
+                r"(one|two|three|four|five|six|\d+)\s+(rows|columns|columns?)", text
+            )
             if match:
                 legend["columns"] = _WORD_NUMBERS.get(match.group(1), 2)
             if re.search(r"hide|no legend|remove the legend|without (a )?legend", text):
@@ -192,6 +299,8 @@ class FakeProvider(ChartProvider):
             style["legend"] = legend
         if axes["x"] or axes["y"]:
             style["axes"] = {k: v for k, v in axes.items() if v}
+        if figure:
+            patch["figure"] = figure
         if style:
             patch["style"] = style
         return patch
