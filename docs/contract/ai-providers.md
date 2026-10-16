@@ -10,6 +10,7 @@ responses from `docs/contract/http-api.md`.
 ChartProvider.generate(prompt, dataset) -> ProviderResult
 ChartProvider.patch(prompt, spec, dataset) -> ProviderResult
 ChartProvider.suggest(dataset) -> SuggestionResult
+ChartProvider.polish(spec, dataset) -> ProviderResult
 ```
 
 where `dataset` is the dataset summary (columns, dtypes, stats, sample),
@@ -23,6 +24,14 @@ free-text generation, so only `StructuredProvider` implements it; the router
 always sends `suggest` to the Structured provider, and `DecisionProvider` / the
 fake provider do not implement it (the endpoint reports `llm_unavailable` when
 no key is configured).
+
+`polish` improves an existing spec towards the quality template, using a
+**two-pass Decisions routine**: pass 1 asks a `predicate` per tunable field
+(should it change?); pass 2 asks a `choice` for each flagged field (what value?).
+Only `DecisionProvider` implements it. `RouterProvider.generate` runs the polish
+pass automatically after producing a figure, so a generated chart is already
+high quality; `RouterProvider.polish` lets the caller re-run it on demand. The
+tunable fields and the template live in the provider's `template` module.
 
 ## Implementations
 

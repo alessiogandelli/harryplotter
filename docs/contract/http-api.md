@@ -110,6 +110,20 @@ Proposes one natural-language chart request for the dataset. Requires an LLM
 (free text is only produced by the Structured provider); without a key it
 responds `503 { "error": "llm_unavailable" }`.
 
+### `POST /api/ai/polish`
+```jsonc
+{ "datasetId": "uuid", "spec": { /* FigureSpec */ } }
+```
+→ the same shape as `/api/ai/patch`: `{ "spec", "patch", "provider", "confidence" }`.
+
+Runs the **two-pass quality pass** towards the figure template: pass 1 asks,
+per tunable field, whether it should change (predicate); pass 2 asks which value
+each flagged field should take (choice). Requires the Decisions-capable backend;
+without a key it responds `503 { "error": "llm_unavailable" }`.
+
+Note: `POST /api/ai/generate` already runs this polish pass automatically, so a
+fresh figure arrives polished; `/api/ai/polish` re-runs it on demand.
+
 ## Versions
 
 ### `POST /api/projects`

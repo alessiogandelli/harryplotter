@@ -250,6 +250,22 @@ class _StubProvider:
     def suggest(self, dataset: dict) -> SuggestionResult:
         return SuggestionResult(prompt="bar plot of score by group", provider="structured")
 
+    def polish(self, spec, dataset):
+        from app.models.figure_spec import parse_figure_spec
+
+        patched = parse_figure_spec(
+            {
+                "version": 1,
+                "figure": {"chartType": "scatter", "series": [{"x": "time", "y": "score"}]},
+                "style": {"palette": "scientific"},
+            }
+        )
+        from app.providers.base import ProviderResult
+
+        return ProviderResult(
+            spec=patched, provider="decisions", confidence=None, patch={"style": {"palette": "scientific"}}
+        )
+
 
 def test_ai_status_reports_no_key(client):
     assert client.get("/api/ai/status").json() == {
@@ -275,3 +291,25 @@ def test_ai_suggest_returns_a_prompt_with_a_provider(client, uploaded, monkeypat
         "prompt": "bar plot of score by group",
         "provider": "structured",
     }
+
+
+def test_ai_polish_requires_a_key(client, uploaded):
+    response = client.post(
+        "/api/ai/polish", json={"datasetId": uploaded["id"], "spec": base_spec()}
+    )
+    assert response.status_code == 503
+    assert response.json()["error"] == "llm_unavailable"
+
+
+def test_ai_polish_returns_the_polished_spec(client, uploaded, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(main_module, "build_provider", lambda: _StubProvider())
+
+    response = client.post(
+        "/api/ai/polish", json={"datasetId": uploaded["id"], "spec": base_spec()}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["spec"]["style"]["palette"] == "scientific"
+    assert body["patch"] == {"style": {"palette": "scientific"}}

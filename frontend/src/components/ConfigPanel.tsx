@@ -1,20 +1,20 @@
-import { useTranslation } from 'react-i18next';
 import { AxesSection } from './sections/AxesSection';
 import { AppearanceSection } from './sections/AppearanceSection';
 import { LegendSection } from './sections/LegendSection';
 import { SeriesSection } from './sections/SeriesSection';
+import { DataSection } from './DataSection';
 import { ExportSection } from './sections/ExportSection';
 
+/** The right-hand settings column. Every section is collapsed by default. */
 export function ConfigPanel() {
-  const { t } = useTranslation();
   return (
-    <section className="panel config-panel">
-      <h2>{t('config.title')}</h2>
+    <aside className="settings">
+      <SeriesSection />
       <AxesSection />
       <AppearanceSection />
       <LegendSection />
-      <SeriesSection />
+      <DataSection />
       <ExportSection />
-    </section>
+    </aside>
   );
 }

@@ -6,9 +6,15 @@ const it = {
   toolbar: {
     undo: 'Annulla',
     redo: 'Ripeti',
+    save: 'Salva',
     language: 'Lingua',
     english: 'English',
     italian: 'Italiano',
+  },
+  header: {
+    dataset: 'Dataset',
+    datasetPlaceholder: 'Scegli un dataset…',
+    upload: 'Carica',
   },
   data: {
     title: 'Dati',
@@ -58,6 +64,9 @@ const it = {
     suggestBusy: 'Sto pensando…',
     suggestHint: 'Suggerisci un grafico per questo dataset',
     suggestNeedsKey: 'Serve una API key (imposta OPENAI_API_KEY)',
+    polish: 'Rifinisci',
+    polishBusy: 'Rifinisco…',
+    polishHint: 'Porta la figura al template di qualità',
     examples: 'Esempi',
     provider: 'Provider',
     confidence: 'Confidenza',

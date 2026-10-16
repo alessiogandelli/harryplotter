@@ -24,8 +24,24 @@ class RouterProvider(ChartProvider):
 
     def generate(self, prompt: str, dataset: dict) -> ProviderResult:
         if pick(prompt, dataset) == "novel":
-            return self._structured.generate(prompt, dataset)
-        return self._decisions.generate(prompt, dataset)
+            base = self._structured.generate(prompt, dataset)
+        else:
+            base = self._decisions.generate(prompt, dataset)
+        # Upgrade the fresh figure towards the quality template. Best-effort: if
+        # the polish pass fails, the base figure is still returned.
+        try:
+            polished = self._decisions.polish(base.spec, dataset)
+        except Exception:  # noqa: BLE001 - polish must never break generation
+            return base
+        return ProviderResult(
+            spec=polished.spec,
+            provider=base.provider,
+            confidence=base.confidence,
+            patch=base.patch,
+        )
+
+    def polish(self, spec: FigureSpec, dataset: dict) -> ProviderResult:
+        return self._decisions.polish(spec, dataset)
 
     def patch(self, prompt: str, spec: FigureSpec, dataset: dict) -> ProviderResult:
         if pick(prompt, dataset) == "novel":

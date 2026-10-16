@@ -8,6 +8,7 @@ is only ever reached when this provider is selected and a key is set.
 
 from __future__ import annotations
 
+import json
 from typing import Any, Optional
 
 import httpx
@@ -17,6 +18,7 @@ from ..models.figure_spec import FigureSpec, dump_figure_spec, parse_figure_spec
 from .base import ChartProvider, ProviderResult
 from .patch import apply_patch
 from .schema import column_names, dataset_context
+from .template import TUNABLE_FIELDS, coerce_recommended, get_path, set_path
 
 MODEL = "gpt-6-luna"
 PRIMITIVE_CHARTS = ["scatter", "line", "bar", "box", "histogram"]
@@ -243,4 +245,75 @@ class DecisionProvider(ChartProvider):
         confidence = body.get("confidence")
         return ProviderResult(
             spec=new_spec, provider=self.name, confidence=confidence, patch=patch
+        )
+
+    def polish(self, spec: FigureSpec, dataset: dict) -> ProviderResult:
+        """Two-pass quality pass towards the template.
+
+        Pass 1 (one Decisions call, predicates): which fields should change?
+        Pass 2 (one Decisions call, choices): what should each flagged field
+        become? The result is a partial patch, so anything untouched is kept.
+        """
+        current = dump_figure_spec(spec)
+        fields = [f for f in TUNABLE_FIELDS if get_path(current, f["path"]) is not None]
+        if not fields:
+            return ProviderResult(spec=spec, provider=self.name, confidence=None, patch={})
+
+        context = (
+            "Goal: a clean, publication-quality scientific figure.\n"
+            f"Current figure spec: {json.dumps(current)}\n"
+            f"Dataset summary: {dataset_context(dataset)}"
+        )
+
+        pass1 = [
+            {
+                "name": field["key"],
+                "type": "predicate",
+                "instructions": (
+                    f"Should the {field['label']} change from its current value "
+                    f"({get_path(current, field['path'])!r}) to better match a "
+                    "polished scientific figure? Answer yes only if it clearly improves it."
+                ),
+            }
+            for field in fields
+        ]
+        body1 = self._ask(context, pass1)
+        flagged = [
+            field
+            for field in fields
+            if (self._answer(body1, field["key"])[0] or 0.0) >= 0.5
+        ]
+        if not flagged:
+            return ProviderResult(spec=spec, provider=self.name, confidence=None, patch={})
+
+        pass2 = [
+            {
+                "name": field["key"],
+                "type": "choice",
+                "instructions": f"Which {field['label']} should be used?",
+                "choices": [
+                    {"value": value, "description": description}
+                    for value, description in field["options"]
+                ],
+            }
+            for field in flagged
+        ]
+        body2 = self._ask(context, pass2)
+
+        patch: dict = {}
+        for field in flagged:
+            chosen, _ = self._answer(body2, field["key"])
+            valid = {value for value, _ in field["options"]}
+            if chosen not in valid:
+                continue
+            set_path(
+                patch, field["path"], coerce_recommended(chosen, field["recommended"])
+            )
+
+        if not patch:
+            return ProviderResult(spec=spec, provider=self.name, confidence=None, patch={})
+        merged = apply_patch(current, patch)
+        new_spec = parse_figure_spec(merged)
+        return ProviderResult(
+            spec=new_spec, provider=self.name, confidence=None, patch=patch
         )

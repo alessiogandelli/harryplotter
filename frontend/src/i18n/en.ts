@@ -6,9 +6,15 @@ const en = {
   toolbar: {
     undo: 'Undo',
     redo: 'Redo',
+    save: 'Save',
     language: 'Language',
     english: 'English',
     italian: 'Italiano',
+  },
+  header: {
+    dataset: 'Dataset',
+    datasetPlaceholder: 'Choose a dataset…',
+    upload: 'Upload',
   },
   data: {
     title: 'Data',
@@ -58,6 +64,9 @@ const en = {
     suggestBusy: 'Thinking…',
     suggestHint: 'Suggest a chart for this dataset',
     suggestNeedsKey: 'Needs an API key (set OPENAI_API_KEY)',
+    polish: 'Polish',
+    polishBusy: 'Polishing…',
+    polishHint: 'Upgrade this figure to the quality template',
     examples: 'Examples',
     provider: 'Provider',
     confidence: 'Confidence',

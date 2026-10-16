@@ -168,6 +168,68 @@ def test_structured_suggest_returns_the_prompt_text():
     assert result.provider == "structured"
 
 
+class _QueueClient:
+    """Returns a queued response per call, recording each request payload."""
+
+    def __init__(self, bodies: list[dict]):
+        self.bodies = list(bodies)
+        self.calls: list[dict] = []
+
+    def post(self, url: str, headers: dict | None = None, json: dict | None = None):
+        self.calls.append(json or {})
+        return _FakeResponse(self.bodies.pop(0))
+
+
+def test_decisions_polish_runs_two_passes():
+    spec = parse_figure_spec(
+        {
+            "version": 1,
+            "figure": {"chartType": "scatter", "series": [{"x": "sentiment", "y": "engagement"}]},
+        }
+    )
+    pass1 = {
+        "answers": [
+            {"type": "predicate", "name": "palette", "probability": 0.9},
+            {"type": "predicate", "name": "legendPosition", "probability": 0.2},
+            {"type": "predicate", "name": "legendOrientation", "probability": 0.8},
+            {"type": "predicate", "name": "xGrid", "probability": 0.7},
+            {"type": "predicate", "name": "yGrid", "probability": 0.1},
+            {"type": "predicate", "name": "markerSize", "probability": 0.9},
+            {"type": "predicate", "name": "fontSize", "probability": 0.1},
+        ]
+    }
+    pass2 = {
+        "answers": [
+            {"type": "choice", "name": "palette", "choice": "scientific", "confidence": 0.9},
+            {"type": "choice", "name": "legendOrientation", "choice": "h", "confidence": 0.8},
+            {"type": "choice", "name": "xGrid", "choice": "false", "confidence": 0.8},
+            {"type": "choice", "name": "markerSize", "choice": "7", "confidence": 0.7},
+        ]
+    }
+    client = _QueueClient([pass1, pass2])
+    provider = DecisionProvider(api_key="test", client=client)
+
+    result = provider.polish(spec, RICH)
+
+    # pass 1 asked predicates for every field, pass 2 asked choices only for flagged ones
+    assert len(client.calls) == 2
+    assert all(q["type"] == "predicate" for q in client.calls[0]["questions"])
+    assert {q["name"] for q in client.calls[1]["questions"]} == {
+        "palette",
+        "legendOrientation",
+        "xGrid",
+        "markerSize",
+    }
+
+    assert result.patch["style"]["palette"] == "scientific"
+    assert result.patch["style"]["legend"]["orientation"] == "h"
+    assert result.patch["style"]["axes"]["x"]["grid"] is False
+    assert result.patch["style"]["marker"]["size"] == 7
+    assert result.spec.style.palette == "scientific"
+    # legend position was not flagged, so it is left alone
+    assert "position" not in result.patch["style"].get("legend", {})
+
+
 class _FakeResponse:
     def __init__(self, body: dict):
         self._body = body

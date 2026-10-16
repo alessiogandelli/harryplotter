@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 
 export function Collapsible({
   title,
-  defaultOpen = true,
+  defaultOpen = false,
   children,
 }: {
   title: string;

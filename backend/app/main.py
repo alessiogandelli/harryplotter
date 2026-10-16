@@ -41,6 +41,11 @@ class SuggestRequest(BaseModel):
     datasetId: str
 
 
+class PolishRequest(BaseModel):
+    datasetId: str
+    spec: dict
+
+
 class ProjectRequest(BaseModel):
     name: str
 
@@ -186,6 +191,26 @@ def ai_suggest(req: SuggestRequest) -> Any:
     except RuntimeError as exc:
         return _error(503, "provider_unavailable", str(exc))
     return result.to_response()
+
+
+@router.post("/ai/polish")
+def ai_polish(req: PolishRequest) -> Any:
+    if not config.openai_api_key():
+        return _error(503, "llm_unavailable", "no API key configured for polishing")
+    summary = db.dataset_summary(req.datasetId)
+    if summary is None:
+        return _error(404, "dataset_not_found", f"no dataset '{req.datasetId}'")
+    spec = parse_figure_spec(req.spec)
+    provider = build_provider()
+    try:
+        result = provider.polish(spec, summary)
+    except NotImplementedError:
+        return _error(503, "llm_unavailable", "the configured provider cannot polish")
+    except RuntimeError as exc:
+        return _error(503, "provider_unavailable", str(exc))
+    body = result.to_patch_response()
+    body["belowThreshold"] = _below_threshold(result.confidence)
+    return body
 
 
 # --------------------------------------------------------------------------- #

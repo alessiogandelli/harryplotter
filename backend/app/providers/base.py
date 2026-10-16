@@ -61,3 +61,11 @@ class ChartProvider:
         the Decisions and fake providers do not.
         """
         raise NotImplementedError
+
+    def polish(self, spec: FigureSpec, dataset: dict) -> ProviderResult:
+        """Improve an existing spec towards the quality template.
+
+        Implemented by the Decisions provider (a two-pass predicate/choice
+        routine); providers that cannot do it leave this unimplemented.
+        """
+        raise NotImplementedError

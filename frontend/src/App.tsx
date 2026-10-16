@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DataPanel } from './components/DataPanel';
+import { ConfigPanel } from './components/ConfigPanel';
+import { DatasetPicker } from './components/DatasetPicker';
 import { PreviewPanel } from './components/PreviewPanel';
 import { PromptBar } from './components/PromptBar';
-import { ConfigPanel } from './components/ConfigPanel';
-import { VersionsPanel } from './components/VersionsPanel';
+import { VersionsDialog } from './components/VersionsDialog';
 import { SUPPORTED_LANGUAGES, setLanguage, type Language } from './i18n';
 import { useCanRedo, useCanUndo, useFigureStore } from './store/figureStore';
 
@@ -13,22 +14,30 @@ export default function App() {
   const redo = useFigureStore((state) => state.redo);
   const canUndo = useCanUndo();
   const canRedo = useCanRedo();
+  const [saveOpen, setSaveOpen] = useState(false);
 
   const language = (i18n.resolvedLanguage ?? 'en') as Language;
 
   return (
     <div className="app">
-      <header className="toolbar">
+      <header className="topbar">
         <div className="brand">
           <h1>{t('app.title')}</h1>
-          <span className="tagline">{t('app.tagline')}</span>
         </div>
-        <div className="toolbar-actions">
+
+        <DatasetPicker />
+
+        <div className="topbar-spacer" />
+
+        <div className="topbar-actions">
           <button type="button" onClick={undo} disabled={!canUndo}>
             {t('toolbar.undo')}
           </button>
           <button type="button" onClick={redo} disabled={!canRedo}>
             {t('toolbar.redo')}
+          </button>
+          <button type="button" className="primary" onClick={() => setSaveOpen(true)}>
+            {t('toolbar.save')}
           </button>
           <select
             className="input language-select"
@@ -46,18 +55,14 @@ export default function App() {
       </header>
 
       <main className="workspace">
-        <aside className="column column-left">
-          <DataPanel />
-          <VersionsPanel />
-        </aside>
-        <section className="column column-center">
+        <section className="workspace-main">
+          <PromptBar />
           <PreviewPanel />
         </section>
-        <aside className="column column-right">
-          <PromptBar />
-          <ConfigPanel />
-        </aside>
+        <ConfigPanel />
       </main>
+
+      {saveOpen && <VersionsDialog onClose={() => setSaveOpen(false)} />}
     </div>
   );
 }

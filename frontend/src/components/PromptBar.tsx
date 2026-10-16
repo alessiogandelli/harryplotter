@@ -15,6 +15,7 @@ export function PromptBar() {
   const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const [polishing, setPolishing] = useState(false);
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [llmAvailable, setLlmAvailable] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +80,22 @@ export function PromptBar() {
     }
   };
 
+  const polish = async () => {
+    if (!datasetId) {
+      setError(t('prompt.noDataset'));
+      return;
+    }
+    setPolishing(true);
+    setError(null);
+    try {
+      applyAi(await api.polish(datasetId, spec));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setPolishing(false);
+    }
+  };
+
   const useExample = (example: string) => {
     setPrompt(example);
     setExamplesOpen(false);
@@ -117,12 +134,23 @@ export function PromptBar() {
 
         <button
           type="button"
+          onClick={polish}
+          disabled={!datasetId || !llmAvailable || polishing || busy}
+          title={llmAvailable ? t('prompt.polishHint') : t('prompt.suggestNeedsKey')}
+        >
+          {polishing ? t('prompt.polishBusy') : t('prompt.polish')}
+        </button>
+
+        <button
+          type="button"
           onClick={suggest}
           disabled={!datasetId || !llmAvailable || suggesting || busy}
           title={llmAvailable ? t('prompt.suggestHint') : t('prompt.suggestNeedsKey')}
         >
           {suggesting ? t('prompt.suggestBusy') : t('prompt.suggest')}
         </button>
+
+        <span className="topbar-spacer" />
 
         <button
           type="button"

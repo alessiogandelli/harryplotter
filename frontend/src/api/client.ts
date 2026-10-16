@@ -123,6 +123,14 @@ export class ApiClient {
     });
   }
 
+  async polish(datasetId: string, spec: FigureSpec): Promise<PatchResponse> {
+    return this.json<PatchResponse>('/ai/polish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ datasetId, spec }),
+    });
+  }
+
   async generate(datasetId: string, prompt: string): Promise<GenerateResponse> {
     return this.json<GenerateResponse>('/ai/generate', {
       method: 'POST',
