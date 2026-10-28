@@ -65,6 +65,7 @@ The figure is described by this spec (TypeScript):
     title, subtitle, caption, xLabel, yLabel, colorLabel: string,       // "" = automatic
     xScale, yScale: "linear"|"log"|"sqrt", xMin, xMax, yMin, yMax: number|null, zeroY: boolean, xTickAngle: number|null /* 0-90, null = auto */,
     palette: ${PALETTES.map((p) => `"${p.id}"`).join(' | ')},
+    colors: { [groupValue: string]: "#rrggbb" },   // exact colours per group of the colour column; key "*" = colour of a single-series chart; replaces the whole map
     theme: "clean"|"classic"|"minimal"|"dark", grid: "none"|"x"|"y"|"both", legend: "auto"|"top"|"right"|"none",
     font: "sans"|"serif"|"mono", fontSize: number /* pt */, markSize, opacity, lineWidth: number,
     preset: ${PRESETS.map((p) => `"${p.id}"`).join(' | ')} | "custom", widthMm, heightMm: number

@@ -22,6 +22,8 @@ export const CASES = [
   { name: 'line_facets', d: growth, spec: make({ mark: 'line', enc: { x: 'time_h', y: 'od600', color: 'strain', facet: 'temperature_C' }, stats: { error: 'ci95' }, style: { yScale: 'log' } }) },
   { name: 'area', d: growth, spec: make({ mark: 'area', enc: { x: 'time_h', y: 'od600', color: 'strain' } }) },
   { name: 'bar_ci', d: rt, spec: make({ mark: 'bar', enc: { x: 'condition', y: 'rt_ms', color: 'session' }, stats: { aggregate: 'mean', error: 'ci95', points: true, test: true } }) },
+  { name: 'bar_custom_colors', d: rt, spec: make({ mark: 'bar', enc: { x: 'condition', y: 'rt_ms', color: 'session' }, stats: { error: 'se' }, style: { colors: { post: '#ff00aa' } } }) },
+  { name: 'single_color', d: rt, spec: make({ mark: 'violin', enc: { x: 'condition', y: 'rt_ms' }, style: { colors: { '*': '#336699' } } }) },
   { name: 'bar_stack', d: pol, spec: make({ mark: 'bar', enc: { x: 'topic', color: 'polarization' }, stats: { barMode: 'fill' } }) },
   { name: 'hist', d: pol, spec: make({ mark: 'histogram', enc: { x: 'sentiment', color: 'polarization' }, stats: { bins: 25 } }) },
   { name: 'density', d: rt, spec: make({ mark: 'density', enc: { x: 'rt_ms', color: 'condition', facet: 'session' }, stats: { points: true } }) },
@@ -46,6 +48,7 @@ describe('code export', () => {
     const r = toR(spec, d);
     expect(py).toContain('savefig');
     expect(r).toContain('ggsave');
+    for (const c of Object.values(spec.style.colors)) { expect(py).toContain(c); expect(r).toContain(c); }
     // write them out so the Python suite can execute them (see python/tests/test_codegen.py)
     const dir = process.env.HP_CODEGEN_OUT;
     if (dir) {

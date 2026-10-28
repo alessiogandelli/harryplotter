@@ -57,6 +57,15 @@ export const PALETTES: Palette[] = [
 
 export const paletteById = (id: string) => PALETTES.find((p) => p.id === id) ?? PALETTES[0];
 
+/** Group colours for a column's levels: the palette in fixed order, with the user's overrides on top. */
+export function groupColors(style: Style, lv: string[]): string[] {
+  const pal = categoricalColors(style.palette);
+  return lv.map((l, i) => style.colors[l] ?? pal[i % pal.length]);
+}
+
+/** Colour of a chart with a single series. */
+export const singleColor = (style: Style) => style.colors['*'] ?? categoricalColors(style.palette)[0];
+
 /** Colours for categorical series, in fixed order. */
 export function categoricalColors(id: string): string[] {
   const p = paletteById(id);
@@ -176,6 +185,7 @@ export const DEFAULT_STYLE: Style = {
   zeroY: false,
   xTickAngle: null,
   palette: 'okabe-ito',
+  colors: {},
   theme: 'clean',
   grid: 'y',
   legend: 'auto',
@@ -284,6 +294,8 @@ export function normalizeSpec(input: unknown, dataset?: Dataset | null): Spec {
       zeroY: typeof sy.zeroY === 'boolean' ? sy.zeroY : s.zeroY,
       xTickAngle: sy.xTickAngle === null || sy.xTickAngle === undefined || sy.xTickAngle === 'auto' ? null : num(sy.xTickAngle, 0, 0, 90),
       palette: PALETTES.some((p) => p.id === sy.palette) ? (sy.palette as string) : s.palette,
+      colors: Object.fromEntries(Object.entries(sy.colors && typeof sy.colors === 'object' ? (sy.colors as Record<string, unknown>) : {})
+        .filter(([, v]) => typeof v === 'string' && /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(v))) as Record<string, string>,
       theme: oneOf(sy.theme, THEMES, s.theme),
       grid: oneOf(sy.grid, GRIDS, s.grid),
       legend: oneOf(sy.legend, LEGENDS, s.legend),

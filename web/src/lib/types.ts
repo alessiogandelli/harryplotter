@@ -112,6 +112,8 @@ export interface Style {
   /** x tick label angle in degrees; null = automatic */
   xTickAngle: number | null;
   palette: string;
+  /** colour overrides: group value → hex; '*' = the single-series colour */
+  colors: Record<string, string>;
   theme: ThemeKind;
   grid: GridKind;
   legend: LegendKind;

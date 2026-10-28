@@ -2,7 +2,7 @@ import * as Plot from '@observablehq/plot';
 import * as d3 from 'd3';
 import { applyFilters, columnOf, keyOf, levels } from './data';
 import {
-  CATEGORICAL_MARKS, FONT_STACKS, MM_TO_PX, PT_TO_PX, categoricalColors, continuousColor, lowerFirst, markInfo, paletteById, prettify,
+  CATEGORICAL_MARKS, FONT_STACKS, MM_TO_PX, PT_TO_PX, categoricalColors, continuousColor, groupColors, singleColor, lowerFirst, markInfo, paletteById, prettify,
 } from './spec';
 import {
   anova, boxStats, formatP, kde, linearRegression, linspace, loess, mean, median, pearson, stars, summarize, welch,
@@ -211,7 +211,8 @@ function setupColor(ctx: Ctx, dataset: Dataset) {
     lv = [...lv.filter((l) => keep.has(l)), 'Other'];
   }
   ctx.colorLevels = lv;
-  ctx.colorRange = lv.map((l, i) => (l === 'Other' && map ? '#a3a3a8' : palette[i % palette.length]));
+  const own = groupColors(ctx.spec.style, lv);
+  ctx.colorRange = lv.map((l, i) => (l === 'Other' && map && !ctx.spec.style.colors.Other ? '#a3a3a8' : own[i]));
   ctx.colorKey = map ? (r) => map!.get(keyOf(r[col]))! : (r) => keyOf(r[col]);
 }
 
@@ -533,7 +534,7 @@ function colorChannel(ctx: Ctx): Partial<Plot.ScaleOptions> | undefined {
   return undefined;
 }
 
-const single = (ctx: Ctx) => categoricalColors(ctx.spec.style.palette)[0];
+const single = (ctx: Ctx) => singleColor(ctx.spec.style);
 
 const tip = (ctx: Ctx, extra: object = {}) => (ctx.interactive ? { tip: { fontSize: ctx.fontPx * 0.95, ...extra } } : {});
 
@@ -689,10 +690,10 @@ function histogram(ctx: Ctx): Layout {
   if (mode === 'group') {
     // overlay: y2 instead of y so groups are not stacked
     // overlay: faint fills plus a crisp step outline per group, so every distribution stays readable
-    marks.push(Plot.rectY(ctx.rows, Plot.binX({ y2: 'count' }, { ...opts, fillOpacity: 0.16, tip: undefined } as any)));
+    marks.push(Plot.rectY(ctx.rows, Plot.binX({ y2: 'count' }, { ...opts, fillOpacity: 0.19 * (st.opacity / 0.85), tip: undefined } as any)));
     marks.push(Plot.lineY(ctx.rows, Plot.binX({ y: 'count', x: 'x1', filter: null }, { x, stroke: c, z: c, thresholds: spec.stats.bins, curve: 'step-after', strokeWidth: st.lineWidth * 0.8, ...facetChannels(ctx), ...tip(ctx) } as any)));
   } else {
-    marks.push(Plot.rectY(ctx.rows, Plot.binX({ y: 'count' }, { ...opts, fillOpacity: Math.max(0.85, st.opacity), offset: mode === 'fill' ? 'normalize' : undefined } as any)));
+    marks.push(Plot.rectY(ctx.rows, Plot.binX({ y: 'count' }, { ...opts, fillOpacity: st.opacity, offset: mode === 'fill' ? 'normalize' : undefined } as any)));
   }
   return {
     marks,
@@ -824,7 +825,7 @@ function categorical(ctx: Ctx, dataset: Dataset): Layout {
       if (mode === 'fill') yLabel = 'Share (%)';
     }
     const withPoints = spec.stats.points && !!y && mode === 'group';
-    marks.push(Plot.rect(bars, { x1: '__x1', x2: '__x2', y1: '__y1', y2: '__y2', fill: '__fill', fillOpacity: withPoints ? 0.5 : Math.max(0.85, st.opacity), rx: 1, ...f, ...(ctx.interactive ? { title: '__t', tip: { fontSize: fontPx * 0.95 } } : {}) } as any));
+    marks.push(Plot.rect(bars, { x1: '__x1', x2: '__x2', y1: '__y1', y2: '__y2', fill: '__fill', fillOpacity: withPoints ? st.opacity * 0.6 : st.opacity, rx: 1, ...f, ...(ctx.interactive ? { title: '__t', tip: { fontSize: fontPx * 0.95 } } : {}) } as any));
     if (err !== 'none' && mode === 'group') {
       const cap = slotW * 0.12;
       const eb = bars.filter((b) => b.__lo !== undefined);

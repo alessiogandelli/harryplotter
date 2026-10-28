@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
-import { PALETTES, PRESETS, applyPreset, markInfo, prettify } from '../lib/spec';
+import { columnOf, levels } from '../lib/data';
+import { PALETTES, PRESETS, applyPreset, groupColors, markInfo, paletteById, prettify, singleColor } from '../lib/spec';
 import type { Spec } from '../lib/types';
 import { useStore } from '../store';
 import { Field, NumberInput, Section, Segmented, Select, Slider, TextInput } from './controls';
@@ -14,6 +15,12 @@ export function StyleTab() {
   const continuousX = ['scatter', 'line', 'area', 'histogram', 'density'].includes(m);
   const continuousY = !['heatmap', 'corr'].includes(m);
   const hasColor = !!spec.enc.color && markInfo(m).slots.includes('color');
+  const dataset = useStore((s) => s.dataset);
+  const colorType = columnOf(dataset, spec.enc.color)?.type;
+  // charts whose colours come from a continuous scale rather than one colour per group
+  const continuousColor = m === 'heatmap' || (hasColor && colorType === 'number' && ['scatter', 'line', 'area'].includes(m));
+  const effectivePalette = continuousColor && paletteById(st.palette).kind === 'categorical' ? 'viridis' : st.palette;
+  const groupedX = ['bar', 'box', 'violin', 'strip', 'histogram'].includes(m);
 
   return (
     <div className="tab-body">
@@ -40,18 +47,25 @@ export function StyleTab() {
       </Section>
 
       <Section title="Colors & look">
-        <div className="palettes">
-          {PALETTES.map((p) => (
-            <button key={p.id} type="button" className={`palette ${st.palette === p.id ? 'on' : ''}`} onClick={() => set('palette', p.id)} title={p.note ?? p.label}>
-              <span className="swatches">
-                {p.kind === 'sequential'
-                  ? <span className="ramp" style={{ background: `linear-gradient(90deg, ${p.colors.join(',')})` }} />
-                  : p.colors.slice(0, 6).map((c) => <span key={c} style={{ background: c }} />)}
-              </span>
-              <span className="palette-name">{p.label}{p.note && <em> · {p.note}</em>}</span>
-            </button>
-          ))}
-        </div>
+        {m === 'corr' ? (
+          <p className="muted small">Correlations always use a blue–red scale centred on 0, so the sign reads at a glance.</p>
+        ) : (
+          <>
+            <div className="palettes">
+              {PALETTES.filter((p) => (continuousColor ? p.kind !== 'categorical' : true)).map((p) => (
+                <button key={p.id} type="button" className={`palette ${effectivePalette === p.id ? 'on' : ''}`} onClick={() => set('palette', p.id)} title={p.note ?? p.label}>
+                  <span className="swatches">
+                    {p.kind !== 'categorical'
+                      ? <span className="ramp" style={{ background: `linear-gradient(90deg, ${p.colors.join(',')})` }} />
+                      : p.colors.slice(0, 6).map((c) => <span key={c} style={{ background: c }} />)}
+                  </span>
+                  <span className="palette-name">{p.label}{p.note && <em> · {p.note}</em>}</span>
+                </button>
+              ))}
+            </div>
+            {!continuousColor && <ColorPickers />}
+          </>
+        )}
         <Field label="Theme">
           <Segmented value={st.theme} onChange={(v) => set('theme', v)} options={[
             { value: 'clean', label: 'Clean' }, { value: 'classic', label: 'Boxed' }, { value: 'minimal', label: 'Minimal' }, { value: 'dark', label: 'Dark' },
@@ -59,14 +73,19 @@ export function StyleTab() {
         </Field>
         {hasAxes && m !== 'heatmap' && (
           <Field label="Gridlines">
-            <Segmented value={st.grid} onChange={(v) => set('grid', v)} options={[
+            {/* charts with grouped or binned x have no vertical grid to show */}
+            <Segmented value={st.grid} onChange={(v) => set('grid', v)} options={groupedX ? [
+              { value: 'none', label: 'None' }, { value: 'y', label: 'Horizontal' },
+            ] : [
               { value: 'none', label: 'None' }, { value: 'y', label: 'Horizontal' }, { value: 'x', label: 'Vertical' }, { value: 'both', label: 'Both' },
             ]} />
           </Field>
         )}
         {hasColor && (
           <Field label="Legend">
-            <Segmented value={st.legend} onChange={(v) => set('legend', v)} options={[
+            <Segmented value={continuousColor && st.legend !== 'none' ? 'auto' : st.legend} onChange={(v) => set('legend', v)} options={continuousColor ? [
+              { value: 'auto', label: 'Shown' }, { value: 'none', label: 'Hidden' },
+            ] : [
               { value: 'auto', label: 'Auto' }, { value: 'top', label: 'Top' }, { value: 'right', label: 'Right' }, { value: 'none', label: 'Hidden' },
             ]} />
           </Field>
@@ -91,7 +110,7 @@ export function StyleTab() {
               <Segmented value={st.xScale} onChange={(v) => set('xScale', v)} options={[{ value: 'linear', label: 'Linear' }, { value: 'log', label: 'Log' }, { value: 'sqrt', label: '√' }]} />
             </Field>
           )}
-          {continuousY && (
+          {continuousY && m !== 'density' && (
             <Field label="Y scale">
               <Segmented value={st.yScale} onChange={(v) => set('yScale', v)} options={[{ value: 'linear', label: 'Linear' }, { value: 'log', label: 'Log' }, { value: 'sqrt', label: '√' }]} />
             </Field>
@@ -123,9 +142,9 @@ export function StyleTab() {
 
       {!['heatmap', 'corr'].includes(m) && (
         <Section title="Marks" open={false}>
-          {['scatter', 'strip', 'line', 'box', 'bar', 'violin'].includes(m) && <Field label="Point size"><Slider value={st.markSize} min={0.5} max={10} step={0.25} onChange={(v) => set('markSize', v)} /></Field>}
+          {(['scatter', 'strip', 'box'].includes(m) || (['line', 'bar', 'violin'].includes(m) && spec.stats.points)) && <Field label={m === 'box' && !spec.stats.points ? 'Outlier size' : 'Point size'}><Slider value={st.markSize} min={0.5} max={10} step={0.25} onChange={(v) => set('markSize', v)} /></Field>}
           {['scatter', 'strip', 'area', 'histogram', 'bar'].includes(m) && <Field label="Opacity"><Slider value={st.opacity} min={0.1} max={1} step={0.05} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => set('opacity', v)} /></Field>}
-          {['line', 'density', 'scatter', 'area'].includes(m) && <Field label="Line width"><Slider value={st.lineWidth} min={0.5} max={5} step={0.25} onChange={(v) => set('lineWidth', v)} /></Field>}
+          {(['line', 'density', 'area'].includes(m) || (m === 'scatter' && spec.stats.trend !== 'none')) && <Field label={m === 'scatter' ? 'Trend line width' : 'Line width'}><Slider value={st.lineWidth} min={0.5} max={5} step={0.25} onChange={(v) => set('lineWidth', v)} /></Field>}
         </Section>
       )}
 
@@ -150,5 +169,41 @@ function ReferenceLines() {
         </div>
       ))}
     </Section>
+  );
+}
+
+/** Pick an exact colour for the single series, or for each group of the colour column. */
+function ColorPickers() {
+  const spec = useStore((s) => s.spec);
+  const dataset = useStore((s) => s.dataset);
+  const update = useStore((s) => s.update);
+  const st = spec.style;
+  const m = spec.mark;
+  const col = markInfo(m).slots.includes('color') ? spec.enc.color : undefined;
+  const lv = col && dataset ? levels(dataset.rows, col).slice(0, 12) : [];
+  const items = lv.length ? lv.map((l, i) => ({ key: l, label: l, color: groupColors(st, lv)[i] })) : [{ key: '*', label: 'Series colour', color: singleColor(st) }];
+  const setColor = (key: string, c: string | null) => update((s) => {
+    const next = { ...s.style.colors };
+    if (c) next[key] = c; else delete next[key];
+    s.style.colors = next;
+  }, `color:${key}`);
+  const overridden = items.some((i) => st.colors[i.key]);
+
+  return (
+    <div className="color-pickers">
+      <div className="color-pickers-head">
+        <span className="field-label">{lv.length ? `Colours of ${prettify(col)}` : 'Colour'}</span>
+        {overridden && <button type="button" className="link-btn" onClick={() => update((s) => { s.style.colors = {}; })}>reset to palette</button>}
+      </div>
+      {items.map((i) => (
+        <label key={i.key} className="color-row" title="Pick a colour">
+          <input type="color" value={i.color.length === 4 ? `#${[...i.color.slice(1)].map((c) => c + c).join('')}` : i.color.slice(0, 7)} onChange={(e) => setColor(i.key, e.target.value)} />
+          <span className="color-name">{i.label}</span>
+          <code>{i.color.toUpperCase()}</code>
+          {st.colors[i.key] && <button type="button" className="icon-btn" onClick={(e) => { e.preventDefault(); setColor(i.key, null); }} aria-label="Back to palette colour">×</button>}
+        </label>
+      ))}
+      {col && dataset && levels(dataset.rows, col).length > 12 && <p className="muted small">Showing the first 12 groups.</p>}
+    </div>
   );
 }

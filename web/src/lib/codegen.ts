@@ -2,7 +2,8 @@
 // so the figure can live on in the researcher's own pipeline.
 
 import { columnOf } from './data';
-import { FONT_STACKS, categoricalColors, lowerFirst, markInfo, prettify, sequentialScheme } from './spec';
+import { levels } from './data';
+import { FONT_STACKS, groupColors, lowerFirst, markInfo, prettify, sequentialScheme, singleColor } from './spec';
 import type { Dataset, Spec } from './types';
 
 const q = (s: string) => JSON.stringify(s);
@@ -47,7 +48,6 @@ export function toPython(spec: Spec, dataset: Dataset, file = `${dataset.name}.c
   const { x, y, color, size, facet, facetRow } = spec.enc;
   const info = markInfo(spec.mark);
   const L = labels(spec, dataset);
-  const colors = categoricalColors(st.palette);
   const dates = dataset.columns.filter((c) => c.type === 'date' && usedColumns(spec).includes(c.name)).map((c) => c.name);
   const hue = color && info.slots.includes('color') ? color : undefined;
   const hueNumeric = hue && columnOf(dataset, hue)?.type === 'number' && !['bar', 'box', 'violin', 'strip', 'histogram', 'density'].includes(spec.mark);
@@ -85,11 +85,15 @@ export function toPython(spec: Spec, dataset: Dataset, file = `${dataset.name}.c
   lines(`    "axes.grid": ${st.grid !== 'none' ? 'True' : 'False'},`);
   if (st.grid !== 'none') lines(`    "axes.grid.axis": ${q(st.grid === 'both' ? 'both' : st.grid)},`, '    "grid.color": "#e6e6e9",', '    "grid.linewidth": 0.6,', '    "axes.axisbelow": True,');
   lines('    "svg.fonttype": "none",  # keep text editable in SVG', '    "pdf.fonttype": 42,', '})');
-  if (!hueNumeric) lines(`palette = ${JSON.stringify(colors)}`);
+  if (hue && !hueNumeric) {
+    const lv = levels(dataset.rows, hue);
+    const cs = groupColors(st, lv);
+    lines(`palette = {${lv.map((l, i) => `${q(l)}: ${q(cs[i])}`).join(', ')}}`);
+  } else if (!hueNumeric) lines(`palette = [${q(singleColor(st))}]`);
   lines('');
 
   const common: string[] = [];
-  if (hue) common.push(`hue=${q(hue)}`, hueNumeric ? `palette=${q(PY_CMAP[sequentialScheme(st.palette)] ?? 'viridis')}` : `palette=palette[: df[${q(hue)}].nunique()]`);
+  if (hue) common.push(`hue=${q(hue)}`, hueNumeric ? `palette=${q(PY_CMAP[sequentialScheme(st.palette)] ?? 'viridis')}` : `palette=palette`);
   if (facet) common.push(`col=${q(facet)}`);
   if (facetRow) common.push(`row=${q(facetRow)}`);
   const sizeArgs = `height=${hIn} / ${nRows}, aspect=(${wIn} / ${nCols}) / (${hIn} / ${nRows})`;
@@ -113,7 +117,7 @@ export function toPython(spec: Spec, dataset: Dataset, file = `${dataset.name}.c
     case 'area': {
       figureLevel = false;
       lines(`fig, ax = plt.subplots(figsize=(${wIn}, ${hIn}), layout="constrained")`);
-      if (hue) lines(`wide = df.pivot_table(index=${q(x!)}, columns=${q(hue)}, values=${q(y!)}, aggfunc="mean")`, `wide.plot.area(ax=ax, color=palette[: wide.shape[1]], alpha=${Math.min(0.9, st.opacity)}, linewidth=0.6)`);
+      if (hue) lines(`wide = df.pivot_table(index=${q(x!)}, columns=${q(hue)}, values=${q(y!)}, aggfunc="mean")`, `wide.plot.area(ax=ax, color=[palette[c] for c in wide.columns], alpha=${Math.min(0.9, st.opacity)}, linewidth=0.6)`);
       else lines(`df.groupby(${q(x!)})[${q(y!)}].mean().plot.area(ax=ax, color=palette[0], alpha=${Math.min(0.9, st.opacity)}, linewidth=0.6)`);
       if (facet || facetRow) lines('# note: facets are not reproduced for area charts in this script');
       break;
@@ -125,7 +129,7 @@ export function toPython(spec: Spec, dataset: Dataset, file = `${dataset.name}.c
         lines(`fig, ax = plt.subplots(figsize=(${wIn}, ${hIn}), layout="constrained")`);
         lines(`wide = ${y ? `df.pivot_table(index=${q(x!)}, columns=${q(hue!)}, values=${q(y)}, aggfunc=${q(a)})` : `pd.crosstab(df[${q(x!)}], df[${q(hue!)}])`}`);
         if (mode === 'fill') lines('wide = wide.div(wide.sum(axis=1), axis=0) * 100');
-        lines(`wide.plot.bar(ax=ax, stacked=True, color=palette[: wide.shape[1]], width=0.76, rot=0)`);
+        lines(`wide.plot.bar(ax=ax, stacked=True, color=[palette[c] for c in wide.columns], width=0.76, rot=0)`);
       } else if (!y) {
         lines(`g = sns.catplot(data=df, kind="count", ${kw(`x=${q(x!)}`, ...common, !hue && 'color=palette[0]', sizeArgs)})`);
       } else {
@@ -234,7 +238,6 @@ export function toR(spec: Spec, dataset: Dataset, file = `${dataset.name}.csv`):
   const { x, y, color, size, facet, facetRow } = spec.enc;
   const info = markInfo(spec.mark);
   const L = labels(spec, dataset);
-  const colors = categoricalColors(st.palette);
   const hue = color && info.slots.includes('color') ? color : undefined;
   const hueNumeric = !!hue && columnOf(dataset, hue)?.type === 'number' && !['bar', 'box', 'violin', 'strip', 'histogram', 'density'].includes(spec.mark);
   const a = agg(spec, dataset);
@@ -254,7 +257,11 @@ export function toR(spec: Spec, dataset: Dataset, file = `${dataset.name}.csv`):
   if (spec.mark === 'line' && spec.stats.timeBin !== 'none' && x && columnOf(dataset, x)?.type === 'date') {
     lines(`df <- df |> mutate(${rn(x)} = lubridate::floor_date(${rn(x)}, ${q(R_BIN[spec.stats.timeBin])}))`);
   }
-  lines(`palette <- c(${colors.map(q).join(', ')})`, '');
+  if (hue && !hueNumeric && !['heatmap', 'corr'].includes(spec.mark)) {
+    const lv = levels(dataset.rows, hue);
+    const cs = groupColors(st, lv);
+    lines(`palette <- c(${lv.map((l, i) => `${q(l)} = ${q(cs[i])}`).join(', ')})`, '');
+  } else lines(`palette <- c(${q(singleColor(st))})`, '');
 
   const geoms: string[] = [];
   let base = `ggplot(df, aes(${[x && spec.mark !== 'corr' ? `x = ${['bar', 'box', 'violin', 'strip'].includes(spec.mark) ? `factor(${rn(x)})` : rn(x)}` : '', y && !['histogram', 'density', 'corr'].includes(spec.mark) ? `y = ${rn(y)}` : '', aesColor, size && spec.mark === 'scatter' ? `size = ${rn(size)}` : ''].filter(Boolean).join(', ')}))`;
