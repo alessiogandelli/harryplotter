@@ -31,6 +31,7 @@ Python or R code.
   “bianco e nero”), as does the ⌘K command palette.
 - **Your data stays on your computer.** Everything runs in the browser. The optional
   local server only proxies AI requests.
+- **Edit on the figure.** Double-click the title, an axis label or the legend title to rewrite it in place.
 - **Paste from Excel.** Copy cells, press ⌘V, done.
 
 | | | |

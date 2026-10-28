@@ -108,9 +108,9 @@ export function render(spec: Spec, dataset: Dataset | null, opts: { interactive?
   const pad = Math.round(fontPx * 0.6);
   const titlePx = fontPx * 1.3;
   let top = pad;
-  const header: { text: string; y: number; px: number; weight: number; color: string }[] = [];
-  if (st.title) { top += titlePx; header.push({ text: st.title, y: top, px: titlePx, weight: 650, color: theme.ink }); top += titlePx * 0.35; }
-  if (st.subtitle) { top += fontPx * 1.05; header.push({ text: st.subtitle, y: top, px: fontPx * 1.05, weight: 400, color: theme.muted }); top += fontPx * 0.4; }
+  const header: { text: string; y: number; px: number; weight: number; color: string; field: string }[] = [];
+  if (st.title) { top += titlePx; header.push({ text: st.title, y: top, px: titlePx, weight: 650, color: theme.ink, field: 'title' }); top += titlePx * 0.35; }
+  if (st.subtitle) { top += fontPx * 1.05; header.push({ text: st.subtitle, y: top, px: fontPx * 1.05, weight: 400, color: theme.muted, field: 'subtitle' }); top += fontPx * 0.4; }
   if (header.length) top += fontPx * 0.5;
   const bottom = st.caption ? fontPx * 2.1 : pad * 0.5;
 
@@ -142,6 +142,7 @@ export function render(spec: Spec, dataset: Dataset | null, opts: { interactive?
 
   for (const h of header) {
     const t = text(h.text, pad, h.y, h.px, h.color, h.weight);
+    t.dataset.edit = h.field;
     svg.appendChild(t);
   }
 
@@ -160,7 +161,16 @@ export function render(spec: Spec, dataset: Dataset | null, opts: { interactive?
     svg.appendChild(g);
   }
 
-  if (st.caption) svg.appendChild(text(st.caption, pad, H - fontPx * 0.8, fontPx * 0.88, theme.muted, 400));
+  if (st.caption) {
+    const c = text(st.caption, pad, H - fontPx * 0.8, fontPx * 0.88, theme.muted, 400);
+    c.dataset.edit = 'caption';
+    svg.appendChild(c);
+  }
+  // in the editor, axis labels can be edited in place too
+  if (opts.interactive) {
+    plotSvg.querySelector('[aria-label="x-axis label"]')?.setAttribute('data-edit', 'xLabel');
+    plotSvg.querySelector('[aria-label="y-axis label"]')?.setAttribute('data-edit', 'yLabel');
+  }
 
   return { svg, notes: [...new Set(notes)], warnings: [...new Set(warnings)] };
 }
@@ -266,7 +276,7 @@ function buildLegend(ctx: Ctx, W: number, H: number): Legend | null {
   if (position === 'top') {
     let x = 0;
     const y = fontPx * 0.9;
-    if (title) { g.appendChild(text(title, x, y + fontPx * 0.35, fontPx, theme.ink, 600)); x += titleW + fontPx; }
+    if (title) { const t = text(title, x, y + fontPx * 0.35, fontPx, theme.ink, 600); t.dataset.edit = 'colorLabel'; g.appendChild(t); x += titleW + fontPx; }
     for (const it of items) {
       g.appendChild(swatch(x, y, colorOf(ctx, it.l)));
       g.appendChild(text(it.l, x + sw + gap, y + fontPx * 0.35, fontPx, theme.ink, 400));
@@ -277,7 +287,7 @@ function buildLegend(ctx: Ctx, W: number, H: number): Legend | null {
 
   const lh = fontPx * 1.45;
   let y = fontPx;
-  if (title) { g.appendChild(text(title, pad, y, fontPx, theme.ink, 600)); y += lh; }
+  if (title) { const t = text(title, pad, y, fontPx, theme.ink, 600); t.dataset.edit = 'colorLabel'; g.appendChild(t); y += lh; }
   for (const it of items) {
     g.appendChild(swatch(pad, y - fontPx * 0.35, colorOf(ctx, it.l)));
     g.appendChild(text(it.l, pad + sw + gap, y, fontPx, theme.ink, 400));
@@ -365,10 +375,10 @@ function buildPlot(ctx: Ctx, dataset: Dataset, width: number, height: number): S
     const dash = { stroke: theme.muted, strokeWidth: 1, strokeDasharray: '4,3' };
     if (a.kind === 'hline') {
       marks.push(Plot.ruleY([a.value], dash));
-      if (a.label) marks.push(Plot.text([a.value], { y: (d: number) => d, text: () => a.label!, frameAnchor: 'right', textAnchor: 'end', dy: -fontPx * 0.6, fill: theme.muted, fontSize: fontPx * 0.9 }));
+      if (a.label) marks.push(Plot.text([a.value], { y: (d: number) => d, text: () => a.label!, frameAnchor: 'right', textAnchor: 'end', dy: -fontPx * 0.6, fill: theme.muted, fontSize: fontPx * 0.9, ...halo(theme) }));
     } else {
       marks.push(Plot.ruleX([a.value], dash));
-      if (a.label) marks.push(Plot.text([a.value], { x: (d: number) => d, text: () => a.label!, frameAnchor: 'top', textAnchor: 'start', dx: 4, dy: 4, fill: theme.muted, fontSize: fontPx * 0.9 }));
+      if (a.label) marks.push(Plot.text([a.value], { x: (d: number) => d, text: () => a.label!, frameAnchor: 'top', textAnchor: 'start', dx: 4, dy: 4, fill: theme.muted, fontSize: fontPx * 0.9, ...halo(theme) }));
     }
   }
 
@@ -483,6 +493,9 @@ const facetChannels = (ctx: Ctx) => ({
   ...(ctx.spec.enc.facetRow ? { fy: ctx.spec.enc.facetRow } : {}),
 });
 
+/** A background-coloured outline so labels stay readable on top of data. */
+const halo = (theme: Theme) => ({ stroke: theme.bg, strokeWidth: 3, strokeOpacity: 0.85, paintOrder: 'stroke' });
+
 const scaleType = (s: string) => (s === 'linear' ? undefined : (s as 'log' | 'sqrt'));
 
 const aggregate = (vals: number[], agg: Aggregate): number => {
@@ -531,11 +544,15 @@ function scatter(ctx: Ctx, dataset: Dataset): Layout {
   marks.push(Plot.dot(ctx.rows, {
     x, y, fill, ...facetChannels(ctx),
     r: size ?? st.markSize,
-    fillOpacity: st.opacity,
+    fillOpacity: size ? Math.min(st.opacity, 0.6) : st.opacity,
     stroke: dark ? '#15171c' : '#ffffff', strokeWidth: 0.5, strokeOpacity: 0.9,
     channels: color && !ctx.colorNumeric ? { [prettify(color)]: (r: Row) => keyOf(r[color]) } : undefined,
     ...tip(ctx),
   } as Plot.DotOptions));
+  if (size) {
+    const [lo, hi] = d3.extent(ctx.rows, (r) => r[size] as number) as [number, number];
+    ctx.notes.push(`Dot area: ${lowerFirst(prettify(size))} (${fmtNum(lo)}–${fmtNum(hi)})`);
+  }
   const xCat = isCategorical(dataset, x!), yCat = isCategorical(dataset, y!);
   if ((spec.stats.trend !== 'none' || spec.stats.test) && !xCat && !yCat) addTrends(ctx, marks, x!, y!);
   return {
@@ -543,7 +560,7 @@ function scatter(ctx: Ctx, dataset: Dataset): Layout {
     x: xCat ? { type: 'point', domain: levels(ctx.rows, x!), padding: 0.5 } : { type: scaleType(st.xScale), nice: true },
     y: yCat ? { type: 'point', domain: levels(ctx.rows, y!), padding: 0.5 } : { type: scaleType(st.yScale), nice: true, zero: st.zeroY || undefined },
     color: colorChannel(ctx),
-    r: size ? { range: [st.markSize * 0.5, st.markSize * 3.2] } : undefined,
+    r: size ? { type: 'sqrt', domain: d3.extent(ctx.rows, (r) => r[size] as number) as [number, number], range: [st.markSize * 0.5, st.markSize * 2.4] } : undefined,
     xLabel: prettify(x),
     yLabel: prettify(y),
   };
@@ -585,7 +602,7 @@ function addTrends(ctx: Ctx, marks: Mark[], x: string, y: string) {
   for (const l of labels) {
     marks.push(Plot.text([l], {
       text: '__t', frameAnchor: 'top-left', dx: fontPx * 0.5, dy: fontPx * 0.4 + (l.__i as number) * fontPx * 1.3,
-      fill: l.__c ? colorOf(ctx, l.__c as string) : theme.ink, fontSize: fontPx * 0.9, textAnchor: 'start', lineAnchor: 'top',
+      fill: l.__c ? colorOf(ctx, l.__c as string) : theme.ink, fontSize: fontPx * 0.9, textAnchor: 'start', lineAnchor: 'top', ...halo(theme),
       ...facetChannels(ctx),
     }));
   }
@@ -664,7 +681,9 @@ function histogram(ctx: Ctx): Layout {
   const marks: Mark[] = [];
   if (mode === 'group') {
     // overlay: y2 instead of y so groups are not stacked
-    marks.push(Plot.rectY(ctx.rows, Plot.binX({ y2: 'count' }, { ...opts, fillOpacity: 0.5, mixBlendMode: st.theme === 'dark' ? 'screen' : 'multiply' } as any)));
+    // overlay: faint fills plus a crisp step outline per group, so every distribution stays readable
+    marks.push(Plot.rectY(ctx.rows, Plot.binX({ y2: 'count' }, { ...opts, fillOpacity: 0.16, tip: undefined } as any)));
+    marks.push(Plot.lineY(ctx.rows, Plot.binX({ y: 'count', x: 'x1', filter: null }, { x, stroke: c, z: c, thresholds: spec.stats.bins, curve: 'step-after', strokeWidth: st.lineWidth * 0.8, ...facetChannels(ctx), ...tip(ctx) } as any)));
   } else {
     marks.push(Plot.rectY(ctx.rows, Plot.binX({ y: 'count' }, { ...opts, fillOpacity: Math.max(0.85, st.opacity), offset: mode === 'fill' ? 'normalize' : undefined } as any)));
   }
@@ -699,7 +718,10 @@ function density(ctx: Ctx): Layout {
     Plot.areaY(pts, { x: '__x', y2: '__d', z: '__k', fill: c, fillOpacity: 0.22, ...f }),
     Plot.line(pts, { x: '__x', y: '__d', z: '__k', stroke: c, strokeWidth: st.lineWidth, ...f }),
   ];
-  if (spec.stats.points) marks.push(Plot.tickX(ctx.rows, { x, stroke: ctx.colorKey ? (r: Row) => ctx.colorKey!(r) : single(ctx), strokeOpacity: 0.35, ...f, y: undefined, frameAnchor: 'bottom' } as any));
+  if (spec.stats.points) {
+    const rugH = (d3.max(pts, (p) => p.__d as number) ?? 1) * 0.045;
+    marks.push(Plot.ruleX(ctx.rows, { x, y1: 0, y2: rugH, stroke: ctx.colorKey ? (r: Row) => ctx.colorKey!(r) : single(ctx), strokeOpacity: 0.5, strokeWidth: 0.8, ...f }));
+  }
   return {
     marks,
     x: { type: scaleType(st.xScale), nice: true },
@@ -916,7 +938,7 @@ function pushJitter(
   const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
   for (const g of groups) {
     const c = center(g.ci, g.si);
-    const fill = keepColor ? shade(fillFor(g.cat, g.sub)) : fillFor(g.cat, g.sub);
+    const fill = keepColor ? shade(fillFor(g.cat, g.sub), ctx.spec.style.theme === 'dark') : fillFor(g.cat, g.sub);
     for (const r of g.rows) {
       const v = r[y];
       if (typeof v !== 'number') continue;
@@ -925,10 +947,10 @@ function pushJitter(
   }
 }
 
-/** Darker version of a colour, used for points drawn over a filled shape of the same hue. */
-function shade(color: string): string {
+/** A version of a colour that stands out over a filled shape of the same hue (lighter on dark figures). */
+function shade(color: string, dark = false): string {
   const c = d3.hsl(color);
-  c.l = Math.max(0.12, c.l * 0.62);
+  c.l = dark ? Math.min(0.88, c.l + (1 - c.l) * 0.55) : Math.max(0.12, c.l * 0.62);
   return c.formatHex();
 }
 
@@ -986,12 +1008,12 @@ function addGroupTests(
     marks.push(Plot.link(brackets, { x1: '__x2', x2: '__x2', y1: (r: Row) => (r.__y as number) - tick, y2: '__y', stroke: theme.ink, strokeWidth: 0.9, ...f }));
   }
   if (labels.length) {
-    marks.push(Plot.text(labels, { x: '__x', y: '__y', text: '__t', dy: -fontPx * 0.55, fill: theme.ink, fontSize: fontPx * 0.92, lineAnchor: 'bottom', ...f, ...(ctx.interactive ? { title: '__full' } : {}) } as any));
+    marks.push(Plot.text(labels, { x: '__x', y: '__y', text: '__t', dy: -fontPx * 0.55, fill: theme.ink, fontSize: fontPx * 0.92, lineAnchor: 'bottom', ...halo(theme), ...f, ...(ctx.interactive ? { title: '__full' } : {}) } as any));
     // invisible point so the y domain leaves room for the label
     marks.push(Plot.dot(labels, { x: '__x', y: (r: Row) => (r.__y as number) + step * 0.9, r: 0, ...f }));
   }
   if (corner.length) {
-    marks.push(Plot.text(corner, { text: '__t', frameAnchor: 'top', dy: fontPx * 0.3, fill: theme.ink, fontSize: fontPx * 0.9, lineAnchor: 'top', ...f, ...(ctx.interactive ? { title: '__full' } : {}) } as any));
+    marks.push(Plot.text(corner, { text: '__t', frameAnchor: 'top', dy: fontPx * 0.3, fill: theme.ink, fontSize: fontPx * 0.9, lineAnchor: 'top', ...halo(theme), ...f, ...(ctx.interactive ? { title: '__full' } : {}) } as any));
     marks.push(Plot.dot(corner, { x: () => 0, y: () => yTop + step * 2.6, r: 0, ...f }));
   }
 }

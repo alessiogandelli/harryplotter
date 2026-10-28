@@ -96,6 +96,7 @@ code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-si
   display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; border: 0; background: transparent; color: var(--muted);
 }
 .icon-btn:hover:not(:disabled) { background: var(--panel-2); color: var(--ink); }
+.icon-btn:focus-visible, .btn:focus-visible, .mark-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .icon-btn:disabled { opacity: .35; cursor: default; }
 .btn-group { display: flex; gap: 2px; }
 .view-toggle { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
@@ -225,6 +226,14 @@ code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-si
 }
 .stage { flex: 1; min-height: 0; display: grid; place-items: center; padding: 20px 20px 8px; overflow: hidden; }
 .paper-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.paper-holder { position: relative; }
+.paper [data-edit] { cursor: text; }
+.paper [data-edit]:hover { opacity: .72; }
+.inline-edit {
+  position: absolute; z-index: 5; padding: 0 8px; border-radius: 6px; border: 2px solid var(--accent); background: #fff; color: #1d1d1f;
+  font: 600 15px/1 var(--font); box-shadow: 0 6px 20px rgba(0, 0, 0, .18); outline: none;
+}
+.paper-meta .hint { opacity: .75; }
 .paper { box-shadow: var(--shadow-paper); border-radius: 3px; overflow: visible; background: #fff; }
 .paper svg { display: block; border-radius: 3px; }
 .paper-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: 11.5px; color: var(--muted); max-width: 90%; }
@@ -353,9 +362,13 @@ tr:hover td { background: var(--panel-2); }
 /* ---------------------------------------------------------------- small screens */
 
 @media (max-width: 860px) {
-  .workspace { flex-direction: column-reverse; overflow-y: auto; }
-  .sidebar { width: 100%; border-right: 0; border-top: 1px solid var(--line); }
-  .center { min-height: 72vh; }
-  .cmdk span, .cmdk kbd, .dataset-chip .muted { display: none; }
-  .brand span { display: none; }
+  .workspace { flex-direction: column; overflow-y: auto; }
+  .center { order: -1; min-height: 78vh; flex: none; }
+  .sidebar { width: 100%; border-right: 0; border-top: 1px solid var(--line); flex: none; }
+  .tab-body { overflow: visible; }
+  .topbar { gap: 4px; padding: 0 8px; }
+  .cmdk, .brand span, .dataset-chip, .view-toggle { display: none; }
+  .btn.primary { padding: 0 10px; }
+  .stage { padding: 12px 8px 4px; }
+  .suggestions { margin-bottom: 72px; }
 }

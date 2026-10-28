@@ -21,6 +21,7 @@ export function figureSVG(spec: Spec, dataset: Dataset, physical = true): { svg:
     el.removeAttribute('class');
   });
   svg.querySelectorAll('style').forEach((s) => s.remove());
+  svg.querySelectorAll('[data-edit]').forEach((el) => el.removeAttribute('data-edit'));
   // Plot aligns text with `dy="0.32em"`; PDF converters ignore em units, so resolve them to user units
   svg.querySelectorAll('text, tspan').forEach((el) => {
     for (const attr of ['dy', 'dx', 'y', 'x']) {

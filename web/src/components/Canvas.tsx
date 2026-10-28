@@ -4,6 +4,8 @@ import { applyFilters } from '../lib/data';
 import { render } from '../lib/render';
 import { MM_TO_PX, presetById } from '../lib/spec';
 import type { Spec } from '../lib/types';
+
+type EditField = 'title' | 'subtitle' | 'caption' | 'xLabel' | 'yLabel' | 'colorLabel';
 import { useStore } from '../store';
 import { TypeIcon } from './icons';
 
@@ -54,13 +56,48 @@ function Figure() {
 
   const preset = presetById(spec.style.preset);
 
+  // ---- edit text in place: double-click a title, label or legend title
+  const update = useStore((s) => s.update);
+  const [editing, setEditing] = useState<{ field: EditField; rect: { x: number; y: number; w: number; h: number }; value: string } | null>(null);
+  const startEdit = (target: Element | null, field?: EditField) => {
+    const el = target?.closest('[data-edit]');
+    const f = field ?? (el?.getAttribute('data-edit') as EditField | null);
+    if (!f || !host.current) return;
+    const paper = host.current.getBoundingClientRect();
+    const r = el?.getBoundingClientRect() ?? new DOMRect(paper.left + 8, paper.top + 8, 220, 24);
+    const value = spec.style[f] || (el?.textContent ?? '');
+    setEditing({ field: f, rect: { x: r.left - paper.left, y: r.top - paper.top, w: Math.max(160, r.width + 40), h: Math.max(26, r.height + 6) }, value });
+  };
+  const commit = (value: string) => {
+    if (!editing) return;
+    const f = editing.field;
+    update((s) => { s.style[f] = value.trim(); });
+    setEditing(null);
+  };
+
   return (
     <div className="stage" ref={stage}>
       {result.svg ? (
         <div className="paper-wrap">
-          <div className="paper" ref={host} style={{ width: W * scale, height: H * scale }} />
+          <div className="paper-holder">
+            <div className="paper" ref={host} style={{ width: W * scale, height: H * scale }} onDoubleClick={(e) => startEdit(e.target as Element)} />
+            {editing && (
+              <input
+                className="inline-edit" autoFocus defaultValue={editing.value}
+                style={{ left: editing.rect.x, top: editing.rect.y, width: editing.rect.w, height: editing.rect.h }}
+                onFocus={(e) => e.currentTarget.select()}
+                onBlur={(e) => commit(e.currentTarget.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commit(e.currentTarget.value);
+                  if (e.key === 'Escape') setEditing(null);
+                }}
+              />
+            )}
+          </div>
           <div className="paper-meta">
             <span>{Math.round(spec.style.widthMm)} × {Math.round(spec.style.heightMm)} mm · {spec.style.fontSize} pt{preset ? ` · ${preset.label}` : ''}</span>
+            {!spec.style.title && <button type="button" className="link-btn" onClick={() => startEdit(null, 'title')}>+ Add title</button>}
+            <span className="hint">Double-click any title or label to edit it</span>
             {result.notes.map((n) => <span key={n} className="note"><Info size={12} /> {n}</span>)}
             {result.warnings.map((n) => <span key={n} className="note warn"><TriangleAlert size={12} /> {n}</span>)}
           </div>

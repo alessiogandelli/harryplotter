@@ -5,6 +5,8 @@ import { TypeIcon } from './icons';
 
 export function Section({ title, children, open: initial = true, aside }: { title: string; children: ReactNode; open?: boolean; aside?: ReactNode }) {
   const [open, setOpen] = useState(initial);
+  // open when content appears later (first filter added, first reference line…)
+  useEffect(() => { if (initial) setOpen(true); }, [initial]);
   return (
     <section className={`section ${open ? 'open' : ''}`}>
       <header>
