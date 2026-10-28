@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { PALETTES } from '../../types/figureSpec';
 import { useFigureStore } from '../../store/figureStore';
-import { setBackground, setFont, setLine, setMargins, setMarker, setPalette, setSize, setSubtitle, setTitle } from '../../store/reducers';
+import { setBackground, setFont, setLine, setMargins, setMarker, setPalette, setSubtitle, setTitle } from '../../store/reducers';
 import { Collapsible } from '../Collapsible';
 import { Field, NumberInput, Select, TextInput } from '../fields';
 
@@ -17,6 +17,7 @@ export function AppearanceSection() {
       <Field label={t('config.appearance.titleLabel')}>
         <TextInput
           value={style.title ?? ''}
+          placeholder={t('config.appearance.titlePlaceholder')}
           onChange={(value) => apply((spec) => setTitle(spec, value || null))}
         />
       </Field>
@@ -97,53 +98,41 @@ export function AppearanceSection() {
         />
       </Field>
 
-      <Field label={t('config.appearance.width')}>
-        <NumberInput
-          value={style.size.width}
-          min={100}
-          onChange={(width) => apply((spec) => setSize(spec, { width: width ?? 900 }))}
-        />
-      </Field>
+      <div className="subgroup">
+        <h4>{t('config.appearance.advanced')}</h4>
 
-      <Field label={t('config.appearance.height')}>
-        <NumberInput
-          value={style.size.height}
-          min={100}
-          onChange={(height) => apply((spec) => setSize(spec, { height: height ?? 600 }))}
-        />
-      </Field>
+        <Field label={t('config.appearance.marginLeft')}>
+          <NumberInput
+            value={style.margins.l}
+            min={0}
+            onChange={(l) => apply((spec) => setMargins(spec, { l: l ?? 0 }))}
+          />
+        </Field>
 
-      <Field label={t('config.appearance.marginLeft')}>
-        <NumberInput
-          value={style.margins.l}
-          min={0}
-          onChange={(l) => apply((spec) => setMargins(spec, { l: l ?? 0 }))}
-        />
-      </Field>
+        <Field label={t('config.appearance.marginRight')}>
+          <NumberInput
+            value={style.margins.r}
+            min={0}
+            onChange={(r) => apply((spec) => setMargins(spec, { r: r ?? 0 }))}
+          />
+        </Field>
 
-      <Field label={t('config.appearance.marginRight')}>
-        <NumberInput
-          value={style.margins.r}
-          min={0}
-          onChange={(r) => apply((spec) => setMargins(spec, { r: r ?? 0 }))}
-        />
-      </Field>
+        <Field label={t('config.appearance.marginTop')}>
+          <NumberInput
+            value={style.margins.t}
+            min={0}
+            onChange={(t) => apply((spec) => setMargins(spec, { t: t ?? 0 }))}
+          />
+        </Field>
 
-      <Field label={t('config.appearance.marginTop')}>
-        <NumberInput
-          value={style.margins.t}
-          min={0}
-          onChange={(t) => apply((spec) => setMargins(spec, { t: t ?? 0 }))}
-        />
-      </Field>
-
-      <Field label={t('config.appearance.marginBottom')}>
-        <NumberInput
-          value={style.margins.b}
-          min={0}
-          onChange={(b) => apply((spec) => setMargins(spec, { b: b ?? 0 }))}
-        />
-      </Field>
+        <Field label={t('config.appearance.marginBottom')}>
+          <NumberInput
+            value={style.margins.b}
+            min={0}
+            onChange={(b) => apply((spec) => setMargins(spec, { b: b ?? 0 }))}
+          />
+        </Field>
+      </div>
     </Collapsible>
   );
 }

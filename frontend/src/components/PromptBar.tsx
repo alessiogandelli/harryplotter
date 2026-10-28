@@ -11,6 +11,7 @@ export function PromptBar() {
   const spec = useFigureStore((state) => state.spec);
   const ai = useFigureStore((state) => state.ai);
   const applyAi = useFigureStore((state) => state.applyAi);
+  const newFigure = useFigureStore((state) => state.newFigure);
 
   const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
@@ -132,6 +133,20 @@ export function PromptBar() {
           {busy ? t('prompt.busy') : isRefinement ? t('prompt.refine') : t('prompt.generate')}
         </button>
 
+        {isRefinement && (
+          <button
+            type="button"
+            onClick={() => {
+              newFigure();
+              setError(null);
+              focus();
+            }}
+            disabled={busy}
+          >
+            {t('prompt.newFigure')}
+          </button>
+        )}
+
         <button
           type="button"
           onClick={polish}
@@ -175,6 +190,8 @@ export function PromptBar() {
           ))}
         </div>
       )}
+
+      <p className="prompt-hint">{t('prompt.hint')}</p>
 
       {error && <p className="error">{error}</p>}
 

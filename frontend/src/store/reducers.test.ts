@@ -47,7 +47,7 @@ describe('control reducers', () => {
   it('merges a partial marker patch', () => {
     const next = setMarker(defaultSpec(), { size: 12 });
     expect(next.style.marker.size).toBe(12);
-    expect(next.style.marker.opacity).toBe(1.0);
+    expect(next.style.marker.opacity).toBe(0.9);
   });
 
   it('updates one series by index', () => {

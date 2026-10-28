@@ -1,7 +1,7 @@
 const en = {
   app: {
-    title: 'FigureLab',
-    tagline: 'AI-powered scientific figure editor',
+    title: 'Harry Plotter',
+    tagline: 'Beautiful scientific figures from your data',
   },
   toolbar: {
     undo: 'Undo',
@@ -48,16 +48,18 @@ const en = {
   preview: {
     title: 'Preview',
     loading: 'Rendering…',
-    empty: 'The plot will appear here once a dataset and columns are chosen.',
+    empty: 'Choose a dataset in the top bar to see your figure here.',
     invalid: 'The figure could not be rendered:',
     error: 'Render failed',
   },
   prompt: {
     title: 'Ask the AI',
-    placeholder: 'e.g. scatter of score over time by group',
-    generate: 'Generate',
+    placeholder: 'e.g. average engagement by topic as a bar chart',
+    generate: 'Create figure',
     refine: 'Refine',
-    busy: 'Thinking…',
+    newFigure: 'New figure',
+    busy: 'Creating…',
+    hint: 'Press ⌘/Ctrl + Enter to run',
     modeGenerate: 'New figure',
     modeRefine: 'Refine current',
     suggest: 'Suggest',
@@ -76,6 +78,16 @@ const en = {
   },
   config: {
     title: 'Configuration',
+    chartTypes: {
+      scatter: 'Scatter',
+      line: 'Line',
+      bar: 'Bar',
+      box: 'Box',
+      histogram: 'Histogram',
+      violin: 'Violin',
+      heatmap: 'Heatmap',
+      area: 'Area',
+    },
     axes: {
       title: 'Axes and ticks',
       x: 'X axis',
@@ -85,6 +97,10 @@ const en = {
       min: 'Min',
       max: 'Max',
       scale: 'Scale',
+      scales: {
+        linear: 'Linear',
+        log: 'Logarithmic',
+      },
       reverse: 'Reverse',
       grid: 'Grid',
       tickMode: 'Ticks',
@@ -98,6 +114,7 @@ const en = {
     appearance: {
       title: 'Appearance',
       titleLabel: 'Title',
+      titlePlaceholder: 'Automatic from columns',
       subtitleLabel: 'Subtitle',
       fontFamily: 'Font family',
       fontSize: 'Font size',
@@ -107,6 +124,7 @@ const en = {
       markerOpacity: 'Opacity',
       markerSymbol: 'Marker symbol',
       lineWidth: 'Line width',
+      advanced: 'Advanced',
       width: 'Width',
       height: 'Height',
       marginLeft: 'Margin left',
@@ -125,6 +143,10 @@ const en = {
       show: 'Show legend',
       position: 'Position',
       orientation: 'Orientation',
+      orientations: {
+        h: 'Horizontal',
+        v: 'Vertical',
+      },
       columns: 'Columns',
       legendTitle: 'Title',
       fontSize: 'Font size',
@@ -172,6 +194,7 @@ const en = {
       scale: 'Scale',
       export: 'Export',
       exporting: 'Exporting…',
+      done: 'Downloaded ✓',
       unavailable: 'Export unavailable for this format on the server.',
     },
   },

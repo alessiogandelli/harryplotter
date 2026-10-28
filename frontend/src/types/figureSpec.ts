@@ -212,9 +212,9 @@ export function defaultStyle(): StyleSpec {
       fontSize: 12,
     },
     font: { family: 'Inter, sans-serif', size: 12 },
-    palette: 'default',
+    palette: 'scientific',
     colorway: null,
-    marker: { size: 8, opacity: 1.0, symbol: 'circle' },
+    marker: { size: 7, opacity: 0.9, symbol: 'circle' },
     line: { width: 2 },
     background: '#ffffff',
     margins: { l: 80, r: 20, t: 60, b: 60 },
@@ -274,9 +274,8 @@ export function applyDatasetColumns(spec: FigureSpec, columns: ColumnLike[]): Fi
   if (req.color === 'opt' && color) {
     next.figure.series[0].color = color;
   }
-  if (!next.style.title && x && y) {
-    next.style.title = `${y} over ${x}`;
-  }
+  // The title is intentionally left unset: the compiler derives a readable one
+  // from the columns (e.g. "Score over Time") unless the user sets one.
   return next;
 }
 

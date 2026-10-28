@@ -31,6 +31,7 @@ export function ExportSection() {
   const [scale, setScale] = useState<number | null>(2);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
 
   const run = async () => {
     if (!datasetId) {
@@ -39,6 +40,7 @@ export function ExportSection() {
     }
     setBusy(true);
     setError(null);
+    setDone(false);
     try {
       const blob = await api.exportFigure({
         datasetId,
@@ -49,6 +51,7 @@ export function ExportSection() {
         scale: scale ?? undefined,
       });
       downloadBlob(blob, exportFilename(format));
+      setDone(true);
     } catch (err) {
       if (err instanceof ApiError && err.code === 'export_unavailable') {
         setError(t('config.export.unavailable'));
@@ -86,6 +89,7 @@ export function ExportSection() {
         {busy ? t('config.export.exporting') : t('config.export.export')}
       </button>
 
+      {done && <span className="muted"> {t('config.export.done')}</span>}
       {error && <p className="error">{error}</p>}
     </Collapsible>
   );

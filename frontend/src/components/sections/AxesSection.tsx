@@ -38,7 +38,10 @@ function AxisControls({ axis }: { axis: AxisName }) {
       <Field label={t('config.axes.scale')}>
         <Select
           value={value.scale}
-          options={AXIS_SCALES.map((scale) => ({ value: scale, label: scale }))}
+          options={AXIS_SCALES.map((scale) => ({
+            value: scale,
+            label: t(`config.axes.scales.${scale}`),
+          }))}
           onChange={(scale) => set({ scale })}
         />
       </Field>

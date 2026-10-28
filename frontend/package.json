@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "FigureLab frontend: three-panel AI-powered scientific figure editor",
+  "description": "Harry Plotter frontend: three-panel AI-powered scientific figure editor",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

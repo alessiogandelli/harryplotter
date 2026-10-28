@@ -36,7 +36,7 @@ export function LegendSection() {
           value={legend.orientation}
           options={LEGEND_ORIENTATIONS.map((orientation) => ({
             value: orientation,
-            label: orientation,
+            label: t(`config.legend.orientations.${orientation}`),
           }))}
           onChange={(orientation) => set({ orientation })}
         />

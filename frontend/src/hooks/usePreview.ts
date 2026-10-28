@@ -31,8 +31,16 @@ export function usePreview(datasetId: string | null, spec: FigureSpec): PreviewR
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!datasetId || !isRenderable(spec)) {
+    if (!datasetId) {
       setFigure(null);
+      setIssues([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    // While the spec is still incomplete, keep the last good figure on screen
+    // instead of flashing an error.
+    if (!isRenderable(spec)) {
       setIssues([]);
       setError(null);
       setLoading(false);
@@ -51,7 +59,6 @@ export function usePreview(datasetId: string | null, spec: FigureSpec): PreviewR
         setError(null);
       } catch (err) {
         if (!alive) return;
-        setFigure(null);
         if (err instanceof ApiValidationError) {
           setIssues(err.errors);
           setError(null);

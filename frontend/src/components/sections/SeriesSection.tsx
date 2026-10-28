@@ -1,12 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { AGGS, CHART_TYPES, type Agg, type ChartType, type Transform } from '../../types/figureSpec';
+import { AGGS, type Agg, type Transform } from '../../types/figureSpec';
 import type { DatasetColumn } from '../../types/api';
 import {
   addSeries,
   addTransform,
   removeSeries,
   removeTransform,
-  setChartType,
   setSeries,
   setTransforms,
 } from '../../store/reducers';
@@ -141,14 +140,6 @@ export function SeriesSection() {
 
   return (
     <Collapsible title={t('config.series.title')}>
-      <Field label={t('config.series.chartType')}>
-        <Select
-          value={figure.chartType}
-          options={CHART_TYPES.map((chartType) => ({ value: chartType, label: chartType }))}
-          onChange={(chartType: ChartType) => apply((spec) => setChartType(spec, chartType))}
-        />
-      </Field>
-
       <h4>{t('config.series.series')}</h4>
       {figure.series.map((series, index) => (
         <div className="series-item" key={index}>

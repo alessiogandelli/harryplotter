@@ -1,7 +1,7 @@
 const it = {
   app: {
-    title: 'FigureLab',
-    tagline: 'Editor di figure scientifiche con IA',
+    title: 'Harry Plotter',
+    tagline: 'Figure scientifiche bellissime dai tuoi dati',
   },
   toolbar: {
     undo: 'Annulla',
@@ -48,16 +48,18 @@ const it = {
   preview: {
     title: 'Anteprima',
     loading: 'Rendering…',
-    empty: 'Il grafico apparirà qui quando saranno scelti dataset e colonne.',
+    empty: 'Scegli un dataset nella barra in alto per vedere la figura qui.',
     invalid: 'Impossibile generare la figura:',
     error: 'Rendering non riuscito',
   },
   prompt: {
     title: 'Chiedi all’IA',
-    placeholder: 'es. scatter di score su time raggruppato per group',
-    generate: 'Genera',
+    placeholder: 'es. engagement medio per argomento come grafico a barre',
+    generate: 'Crea figura',
     refine: 'Raffina',
-    busy: 'Elaborazione…',
+    newFigure: 'Nuova figura',
+    busy: 'Creazione…',
+    hint: 'Premi ⌘/Ctrl + Invio per eseguire',
     modeGenerate: 'Nuova figura',
     modeRefine: 'Raffina la corrente',
     suggest: 'Suggerisci',
@@ -76,6 +78,16 @@ const it = {
   },
   config: {
     title: 'Configurazione',
+    chartTypes: {
+      scatter: 'A dispersione',
+      line: 'Linee',
+      bar: 'Barre',
+      box: 'Box',
+      histogram: 'Istogramma',
+      violin: 'Violino',
+      heatmap: 'Mappa di calore',
+      area: 'Area',
+    },
     axes: {
       title: 'Assi e tacche',
       x: 'Asse X',
@@ -85,6 +97,10 @@ const it = {
       min: 'Min',
       max: 'Max',
       scale: 'Scala',
+      scales: {
+        linear: 'Lineare',
+        log: 'Logaritmica',
+      },
       reverse: 'Inverti',
       grid: 'Griglia',
       tickMode: 'Tacche',
@@ -98,6 +114,7 @@ const it = {
     appearance: {
       title: 'Aspetto',
       titleLabel: 'Titolo',
+      titlePlaceholder: 'Automatico dalle colonne',
       subtitleLabel: 'Sottotitolo',
       fontFamily: 'Famiglia font',
       fontSize: 'Dimensione font',
@@ -107,6 +124,7 @@ const it = {
       markerOpacity: 'Opacità',
       markerSymbol: 'Simbolo marker',
       lineWidth: 'Spessore linea',
+      advanced: 'Avanzate',
       width: 'Larghezza',
       height: 'Altezza',
       marginLeft: 'Margine sinistro',
@@ -125,6 +143,10 @@ const it = {
       show: 'Mostra legenda',
       position: 'Posizione',
       orientation: 'Orientamento',
+      orientations: {
+        h: 'Orizzontale',
+        v: 'Verticale',
+      },
       columns: 'Colonne',
       legendTitle: 'Titolo',
       fontSize: 'Dimensione font',
@@ -172,6 +194,7 @@ const it = {
       scale: 'Scala',
       export: 'Esporta',
       exporting: 'Esportazione…',
+      done: 'Scaricato ✓',
       unavailable: 'Formato non disponibile sul server.',
     },
   },

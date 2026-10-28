@@ -23,6 +23,7 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <h1>{t('app.title')}</h1>
+          <span className="tagline">{t('app.tagline')}</span>
         </div>
 
         <DatasetPicker />

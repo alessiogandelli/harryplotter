@@ -41,7 +41,8 @@ describe('applyDatasetColumns', () => {
     expect(series.x).toBe('date');
     expect(series.y).toBe('sentiment');
     expect(series.color).toBe('source');
-    expect(spec.style.title).toBe('sentiment over date');
+    // The title is derived by the compiler, not set here.
+    expect(spec.style.title).toBeNull();
   });
 
   it('never overwrites an existing column mapping', () => {

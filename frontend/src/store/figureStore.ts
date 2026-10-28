@@ -49,6 +49,8 @@ export interface FigureStoreState {
   /** Restore a saved spec, resetting history to a single entry. */
   restore: (spec: FigureSpec) => void;
   reset: () => void;
+  /** Clear the figure for the current dataset, ready for a fresh AI request. */
+  newFigure: () => void;
 }
 
 interface History {
@@ -150,6 +152,19 @@ export const useFigureStore = create<FigureStoreState>((set) => ({
       datasetId: null,
       dataset: null,
       ai: null,
+    }),
+
+  newFigure: () =>
+    set((state) => {
+      const base = defaultSpec(
+        state.dataset
+          ? { id: state.dataset.id, contentHash: state.dataset.contentHash }
+          : undefined,
+      );
+      const spec = state.dataset
+        ? applyDatasetColumns(base, state.dataset.columns)
+        : base;
+      return { spec, past: [], future: [], ai: null };
     }),
 }));
 
