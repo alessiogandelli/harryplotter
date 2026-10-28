@@ -13,7 +13,7 @@ export function loadSettings(): AISettings {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) return { baseUrl: '', apiKey: '', model: '', ...JSON.parse(raw) };
   } catch { /* storage unavailable */ }
-  return { baseUrl: 'https://openrouter.ai/api/v1', apiKey: '', model: 'openai/gpt-4.1-mini' };
+  return { baseUrl: 'https://openrouter.ai/api/v1', apiKey: '', model: 'deepseek/deepseek-v4.1-flash' };
 }
 
 export function saveSettings(s: AISettings) {

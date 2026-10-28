@@ -69,20 +69,20 @@ harryplotter results.csv
 
 ```bash
 export OPENROUTER_API_KEY=...        # or OPENAI_API_KEY=...
-export HARRYPLOTTER_MODEL=openai/gpt-4.1-mini   # optional
+export HARRYPLOTTER_MODEL=deepseek/deepseek-v4.1-flash   # the default; any vision-capable model works
 # any OpenAI-compatible endpoint, e.g. a local Ollama:
 export HARRYPLOTTER_BASE_URL=http://localhost:11434/v1 HARRYPLOTTER_API_KEY=ollama HARRYPLOTTER_MODEL=qwen2.5:7b
 ```
 
 **What it costs.** Measured with real calls on the example dataset (OpenRouter prices, Oct 2026):
 
-| action | tokens in / out | gpt-4.1-mini (default) | deepseek-v4.1-flash |
+| action | tokens in / out | gpt-4.1-mini | deepseek-v4.1-flash (default) |
 |---|---|---|---|
 | edit by prompt | ~1.3k / 0.2–0.4k | $0.0008 | $0.0004 |
 | improve (with image) | ~2k / 0.03–1.3k | $0.0009 | $0.0008 |
 | ideas from data | ~1.5k / 0.6–1.6k | $0.0015 | $0.0009 |
 
-That is roughly 3 cents for a long session (30 edits, 5 improves, 2 idea rounds), and the
+That is roughly 1.5 cents for a long session with the default model (30 edits, 5 improves, 2 idea rounds), and the
 deterministic half of Improve, ⌘K and the offline phrases cost nothing.
 
 The editor also works as a plain static site (GitHub Pages, a file share). In that

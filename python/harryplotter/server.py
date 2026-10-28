@@ -46,7 +46,7 @@ class AIConfig:
         if not key and os.environ.get("OPENAI_API_KEY"):
             key, base = os.environ["OPENAI_API_KEY"], base or "https://api.openai.com/v1"
         base = base or "https://openrouter.ai/api/v1"
-        default_model = "gpt-4.1-mini" if "api.openai.com" in base else "openai/gpt-4.1-mini"
+        default_model = "gpt-5-mini" if "api.openai.com" in base else "deepseek/deepseek-v4.1-flash"
         return cls(key, base.rstrip("/"), os.environ.get("HARRYPLOTTER_MODEL") or default_model)
 
     @property

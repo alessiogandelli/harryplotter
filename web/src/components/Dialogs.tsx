@@ -201,11 +201,11 @@ export function SettingsDialog() {
             <p className="muted small">Harry works without AI: every control, ⌘K and short phrases (“log y”, “color by group”). For free-form requests connect any OpenAI-compatible API — OpenRouter, OpenAI, a local Ollama or LM Studio. The key stays in this browser.</p>
             <label className="field"><span className="field-label">API base URL</span><input className="input" value={s.baseUrl} onChange={(e) => setS({ ...s, baseUrl: e.target.value })} placeholder="https://openrouter.ai/api/v1" /></label>
             <label className="field"><span className="field-label">API key</span><input className="input" type="password" value={s.apiKey} onChange={(e) => setS({ ...s, apiKey: e.target.value })} placeholder="sk-…" autoComplete="off" /></label>
-            <label className="field"><span className="field-label">Model</span><input className="input" value={s.model} onChange={(e) => setS({ ...s, model: e.target.value })} placeholder="openai/gpt-4.1-mini" /></label>
+            <label className="field"><span className="field-label">Model</span><input className="input" value={s.model} onChange={(e) => setS({ ...s, model: e.target.value })} placeholder="deepseek/deepseek-v4.1-flash" /></label>
             <div className="presets-row">
               {[
-                ['OpenRouter', 'https://openrouter.ai/api/v1', 'openai/gpt-4.1-mini'],
-                ['OpenAI', 'https://api.openai.com/v1', 'gpt-4.1-mini'],
+                ['OpenRouter', 'https://openrouter.ai/api/v1', 'deepseek/deepseek-v4.1-flash'],
+                ['OpenAI', 'https://api.openai.com/v1', 'gpt-5-mini'],
                 ['Ollama (local)', 'http://localhost:11434/v1', 'qwen2.5:7b'],
               ].map(([n, u, m]) => <button key={n} type="button" className="chip" onClick={() => setS({ ...s, baseUrl: u, model: m })}>{n}</button>)}
             </div>
