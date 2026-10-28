@@ -1,9 +1,14 @@
 import json
 
+import httpx
+import pytest
+
 from app.models.figure_spec import parse_figure_spec
+from app.providers.base import ProviderResult
 from app.providers.decisions import DecisionProvider
+from app.providers.factory import RouterProvider
 from app.providers.fake import FakeProvider, choose_chart_type, explicit_chart_type
-from app.providers.router import pick
+from app.providers.router import is_simple_refinement, pick
 from app.providers.structured import StructuredProvider
 
 DATASET = {
@@ -59,6 +64,109 @@ def test_router_keyword_heuristic():
     assert pick("scatter of score over time") == "known"
     assert pick("a violin plot of score") == "novel"
     assert pick("something completely different") == "known"
+
+
+def test_router_ignores_hints_inside_words():
+    # "areas" must not be mistaken for the "area" chart type.
+    assert pick("compare warehouse areas by region") == "known"
+
+
+def test_simple_refinement_detection():
+    assert is_simple_refinement("put the legend on top")
+    assert is_simple_refinement("use a log scale on the y axis")
+    assert is_simple_refinement("switch to a grayscale palette")
+    assert not is_simple_refinement("change it to a bar chart")
+    assert not is_simple_refinement("plot the average engagement by topic")
+    assert not is_simple_refinement("set the title to My Figure")
+
+
+class _StubProvider:
+    def __init__(self, tag: str):
+        self.tag = tag
+        self.generated = 0
+        self.patched = 0
+
+    def generate(self, prompt: str, dataset: dict) -> ProviderResult:
+        self.generated += 1
+        spec = parse_figure_spec(
+            {
+                "version": 1,
+                "figure": {"chartType": "scatter", "series": [{"x": "time", "y": "score"}]},
+            }
+        )
+        return ProviderResult(spec=spec, provider=self.tag, confidence=None)
+
+    def patch(self, prompt: str, spec, dataset: dict) -> ProviderResult:
+        self.patched += 1
+        return ProviderResult(spec=spec, provider=self.tag, confidence=None)
+
+    def polish(self, spec, dataset: dict) -> ProviderResult:
+        return ProviderResult(spec=spec, provider=self.tag, confidence=None)
+
+    def suggest(self, dataset: dict):
+        raise NotImplementedError
+
+
+def test_router_uses_llm_to_create_and_decisions_for_simple_refinements():
+    decisions = _StubProvider("decisions")
+    structured = _StubProvider("structured")
+    router = RouterProvider(decisions, structured)
+
+    result = router.generate("scatter of score over time", DATASET)
+    assert result.provider == "structured"
+    assert structured.generated == 1
+
+    spec = parse_figure_spec(
+        {
+            "version": 1,
+            "figure": {"chartType": "scatter", "series": [{"x": "time", "y": "score"}]},
+        }
+    )
+    router.patch("put the legend on top", spec, DATASET)
+    assert decisions.patched == 1
+    assert structured.patched == 0
+
+    router.patch("plot the average engagement by topic", spec, DATASET)
+    assert structured.patched == 1
+
+
+def test_structured_generate_injects_dataset_ref_and_system_prompt():
+    payload = {
+        "version": 1,
+        "figure": {"chartType": "scatter", "series": [{"x": "time", "y": "score"}]},
+        "style": {"title": "Whatever the model said"},
+    }
+    body = {"output_text": json.dumps(payload)}
+    client = _FakeClient(body)
+    provider = StructuredProvider(api_key="test", client=client)
+
+    result = provider.generate("scatter of score over time", DATASET)
+
+    # The dataset reference is set server-side, not trusted from the model.
+    assert result.spec.dataset.id == "ds-1"
+    assert result.spec.dataset.contentHash == "sha256:abc"
+    # A system prompt is sent so the model knows the chart matrix and rules.
+    assert client.payload["instructions"]
+    # The FigureSpec schema uses unions/dicts that OpenAI strict mode rejects,
+    # so generation must use non-strict structured output.
+    assert client.payload["text"]["format"]["strict"] is False
+
+
+class _ResponseClient:
+    def __init__(self, response):
+        self._response = response
+
+    def post(self, url, headers=None, json=None):  # noqa: A002 - httpx signature
+        return self._response
+
+
+def test_structured_http_error_becomes_runtime_error():
+    request = httpx.Request("POST", "https://example.test/v1/responses")
+    response = httpx.Response(400, request=request, text='{"error":"bad schema"}')
+    provider = StructuredProvider(api_key="test", client=_ResponseClient(response))
+
+    with pytest.raises(RuntimeError):
+        provider.generate("scatter of score over time", DATASET)
 
 
 RICH = {

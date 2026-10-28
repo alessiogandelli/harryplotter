@@ -48,9 +48,9 @@ This file is the source of truth; if code and this file disagree, this file wins
       "columns": null, "title": null, "order": null, "fontSize": 12
     },
     "font": { "family": "Inter, sans-serif", "size": 12 },
-    "palette": "default",
+    "palette": "scientific",
     "colorway": null,
-    "marker": { "size": 8, "opacity": 1.0, "symbol": "circle" },
+    "marker": { "size": 7, "opacity": 0.9, "symbol": "circle" },
     "line": { "width": 2 },
     "background": "#ffffff",
     "margins": { "l": 80, "r": 20, "t": 60, "b": 60 },
@@ -86,11 +86,13 @@ This file is the source of truth; if code and this file disagree, this file wins
 | box       | opt | req | opt |
 | histogram | req | — | opt |
 | violin    | opt | req | opt |
-| heatmap   | req | req (z) | — |
+| heatmap   | req | req (z) | opt (row axis) |
 | area      | req | req | opt |
 
 `x`/`y`/`color` are column names from the dataset (after transforms). Choosing a
-`color` column splits the data into one trace per category.
+`color` column splits the data into one trace per category. For a `heatmap`,
+`x` is the column axis, `y` is the aggregated cell value, and `color` (when set)
+becomes the row axis, producing a real pivot matrix.
 
 ## Semantics
 
@@ -102,6 +104,13 @@ This file is the source of truth; if code and this file disagree, this file wins
   "auto". Reversed axes use `reverse: true`.
 - `style.legend.order`, when non-null, is a list of series names controlling
   display order.
+- `style.title` and `style.axes.*.label` may be `null`; the compiler then derives
+  readable labels from the plotted columns (e.g. `score` -> "Score").
+- `style.size` applies to static export. Interactive previews are rendered
+  responsive (`autosize`) and fill their container.
+- The compiler applies a clean scientific theme (muted gridlines, neutral axis
+  lines, restrained typography) on top of the spec. A single-series legend is
+  hidden unless `style.legend.title` is set.
 - `meta.modelVersion` records which model produced the spec, when it came from AI.
 
 ## Defaults

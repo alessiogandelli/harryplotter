@@ -167,13 +167,9 @@ def ai_patch(req: PatchRequest) -> Any:
 
 @router.get("/ai/status")
 def ai_status() -> dict:
-    # Suggestions need free text, so they require a key and a Structured-capable
-    # mode (auto or structured).
-    available = bool(config.openai_api_key()) and config.provider_mode() in (
-        "auto",
-        "structured",
-    )
-    return {"llmAvailable": available, "provider": "structured"}
+    mode = config.provider_mode()
+    available = bool(config.openai_api_key()) and mode != "fake"
+    return {"llmAvailable": available, "provider": mode}
 
 
 @router.post("/ai/suggest")
@@ -308,7 +304,7 @@ def create_app() -> FastAPI:
         datasets.seed_samples()
         yield
 
-    app = FastAPI(title="FigureLab", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="Harry Plotter", version="0.1.0", lifespan=lifespan)
 
     @app.exception_handler(SpecValidationError)
     async def _spec_error(_request, exc: SpecValidationError) -> JSONResponse:

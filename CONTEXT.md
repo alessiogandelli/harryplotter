@@ -24,8 +24,9 @@ it with deterministic controls and exports it for publication.
   (`generate`, `patch`). Implementations: `DecisionProvider` (OpenAI Decisions
   API), `StructuredProvider` (OpenAI Structured Outputs), `FakeProvider`
   (deterministic, used in tests).
-- **Router** — decides whether a request targets a known primitive (fast
-  Decisions path) or a novel chart type (Structured path).
+- **Router** — picks the provider per request: creating a whole figure always
+  uses the LLM (Structured path); small closed-vocabulary refinements (legend,
+  palette, scale) use the fast Decisions path.
 - **Version** — a saved instance of a FigureSpec, retained for reproducibility.
 
 ## Domain rules

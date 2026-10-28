@@ -176,19 +176,19 @@ class FakeProvider(ChartProvider):
         if color is not None:
             series["color"] = color
 
-        if y and x:
-            title = f"{y} over {x}"
-        elif x:
-            title = f"{chart} of {x}"
-        else:
-            title = chart
+        # A bar chart comparing a measure across categories should aggregate
+        # ("engagement by topic"), not draw one bar per row.
+        transforms: list = []
+        if chart == "bar" and x in categorical and y in numeric:
+            transforms.append({"op": "groupby", "by": [x], "agg": {y: "mean"}})
 
         spec_dict = {
             "version": 1,
             "dataset": {"id": dataset.get("id"), "contentHash": dataset.get("contentHash")},
-            "transforms": [],
+            "transforms": transforms,
             "figure": {"chartType": chart, "series": [series]},
-            "style": {"title": title},
+            # Leave title/labels unset so the compiler derives readable ones.
+            "style": {},
             "meta": {"modelVersion": "fake-v1"},
         }
         spec = parse_figure_spec(spec_dict)
@@ -266,7 +266,7 @@ class FakeProvider(ChartProvider):
         if title_match:
             style["title"] = title_match.group(1)
         elif re.search(r"remove the title|no title|hide the title", text):
-            style["title"] = None
+            style["title"] = ""
 
         target = "y"
         if re.search(r"\bx[- ]?axis|\bx\b", text) and not re.search(r"\by[- ]?axis", text):

@@ -8,6 +8,7 @@ object. It never executes model-provided code.
 from __future__ import annotations
 
 import json
+import re
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -47,9 +48,23 @@ CHART_MATRIX: dict[str, dict[str, str]] = {
     "box": {"x": "opt", "y": "req", "color": "opt"},
     "histogram": {"x": "req", "y": "forbidden", "color": "opt"},
     "violin": {"x": "opt", "y": "req", "color": "opt"},
-    "heatmap": {"x": "req", "y": "req", "color": "forbidden"},
+    "heatmap": {"x": "req", "y": "req", "color": "opt"},
     "area": {"x": "req", "y": "req", "color": "opt"},
 }
+
+# A clean, publication-oriented rendering theme. Applied on top of the spec so
+# even a bare FigureSpec (e.g. straight from the fast Decisions path) looks
+# finished. Colours are deliberately restrained: light gridlines, thin neutral
+# axis lines, muted tick labels.
+THEME: dict[str, str] = {
+    "text": "#1c2330",
+    "muted": "#66707f",
+    "grid": "#e7ebf0",
+    "axis_line": "#c2cad6",
+}
+
+HEATMAP_COLORSCALE = "Viridis"
+
 
 
 # --------------------------------------------------------------------------- #
@@ -174,6 +189,47 @@ def _colorway(style: StyleSpec) -> list[str] | None:
     return PALETTES.get(style.palette)
 
 
+def _humanize(name: str | None) -> str:
+    """Turn a column name into a readable label ('engagement_rate' -> 'Engagement rate')."""
+    if not name:
+        return ""
+    text = re.sub(r"[_\-]+", " ", str(name)).strip()
+    text = re.sub(r"\s+", " ", text)
+    return text[:1].upper() + text[1:] if text else ""
+
+
+def _auto_title(spec: FigureSpec) -> str:
+    series = spec.figure.series[0] if spec.figure.series else None
+    if series is None:
+        return ""
+    chart = spec.figure.chartType
+    if chart == "histogram":
+        return f"Distribution of {_humanize(series.x)}".strip()
+    if series.y and series.x:
+        if chart == "scatter":
+            return f"{_humanize(series.y)} vs {_humanize(series.x)}"
+        if chart in ("line", "area"):
+            return f"{_humanize(series.y)} over {_humanize(series.x)}"
+        return f"{_humanize(series.y)} by {_humanize(series.x)}"
+    if series.y:
+        return _humanize(series.y)
+    return _humanize(series.x)
+
+
+def _auto_axis_label(spec: FigureSpec, axis: str) -> str:
+    series = spec.figure.series[0] if spec.figure.series else None
+    if series is None:
+        return ""
+    if axis == "x":
+        return _humanize(series.x)
+    if spec.figure.chartType == "histogram":
+        return "Count"
+    if spec.figure.chartType == "heatmap":
+        return _humanize(series.color)
+    return _humanize(series.y)
+
+
+
 def _build_trace(
     chart_type: str,
     x,
@@ -189,15 +245,19 @@ def _build_trace(
         "opacity": marker.opacity,
         "symbol": marker.symbol,
     }
-    line_kwargs = {"width": line.width}
+    line_kwargs: dict = {"width": line.width}
+    if color:
+        line_kwargs["color"] = color
 
     if chart_type == "scatter":
+        if color:
+            marker_kwargs["color"] = color
         return go.Scatter(x=x, y=y, name=name, mode="markers", marker=marker_kwargs)
     if chart_type == "line":
         return go.Scatter(x=x, y=y, name=name, mode="lines", line=line_kwargs)
     if chart_type == "area":
         return go.Scatter(
-            x=x, y=y, name=name, mode="lines", fill="tozeroy", line=line_kwargs
+            x=x, y=y, name=name, mode="lines", line=line_kwargs, stackgroup="one"
         )
     if chart_type == "bar":
         return go.Bar(
@@ -229,8 +289,6 @@ def _build_trace(
             opacity=marker.opacity,
             marker={"color": color},
         )
-    if chart_type == "heatmap":
-        return go.Heatmap(x=x, z=y, name=name)
     raise SpecValidationError(
         [{"path": "figure.chartType", "message": f"unsupported chart type '{chart_type}'"}]
     )
@@ -274,10 +332,26 @@ def _series_traces(
     return traces
 
 
-def _axis_config(axis, orientation: str) -> dict:
-    config: dict = {"showgrid": axis.grid}
-    if axis.label:
-        config["title"] = {"text": axis.label}
+def _axis_config(axis, label: str, font_size: int) -> dict:
+    config: dict = {
+        "showgrid": axis.grid,
+        "gridcolor": THEME["grid"],
+        "gridwidth": 1,
+        "zeroline": False,
+        "showline": True,
+        "linecolor": THEME["axis_line"],
+        "linewidth": 1,
+        "ticks": "outside",
+        "ticklen": 4,
+        "tickwidth": 1,
+        "tickcolor": THEME["axis_line"],
+        "tickfont": {"size": max(9, font_size - 1), "color": THEME["muted"]},
+        "title": {
+            "text": label or "",
+            "font": {"size": font_size, "color": THEME["text"]},
+            "standoff": 8,
+        },
+    }
     if axis.scale == "log":
         config["type"] = "log"
     low, high = axis.range
@@ -298,7 +372,9 @@ def _axis_config(axis, orientation: str) -> dict:
 def _legend_config(style: StyleSpec) -> dict:
     legend = {
         "orientation": style.legend.orientation,
-        "font": {"size": style.legend.fontSize},
+        "font": {"size": style.legend.fontSize, "color": THEME["text"]},
+        "bgcolor": "rgba(0,0,0,0)",
+        "borderwidth": 0,
     }
     position = style.legend.position
     if position == "top":
@@ -317,14 +393,62 @@ def _legend_config(style: StyleSpec) -> dict:
     return legend
 
 
-def _build_layout(spec: FigureSpec) -> go.Layout:
+def _heatmap_traces(spec: FigureSpec, df: pd.DataFrame) -> list:
+    series = spec.figure.series[0]
+    value, column, row = series.y, series.x, series.color
+    if not column or column not in df.columns or not value or value not in df.columns:
+        return []
+    if row and row in df.columns:
+        pivot = df.pivot_table(
+            index=row, columns=column, values=value, aggfunc="mean"
+        )
+    else:
+        pivot = df.groupby(column, dropna=False)[value].mean().to_frame().T
+    z = [[to_jsonable(v) for v in row_values] for row_values in pivot.values]
+    return [
+        go.Heatmap(
+            z=z,
+            x=[to_jsonable(c) for c in pivot.columns],
+            y=[to_jsonable(i) for i in pivot.index],
+            colorscale=HEATMAP_COLORSCALE,
+            colorbar={"title": {"text": _humanize(value), "side": "right"}},
+            hovertemplate="%{x} · %{y}<br>%{z:.4g}<extra></extra>",
+        )
+    ]
+
+
+def _build_layout(
+    spec: FigureSpec, responsive: bool = False, n_traces: int = 1
+) -> go.Layout:
     style = spec.style
-    title = {"text": style.title or ""}
+    figure_title = style.title if style.title is not None else _auto_title(spec)
+    title: dict = {
+        "text": figure_title or "",
+        "font": {"size": style.font.size + 6, "color": THEME["text"]},
+    }
     if style.subtitle:
-        title["subtitle"] = {"text": style.subtitle}
+        title["subtitle"] = {
+            "text": style.subtitle,
+            "font": {"size": style.font.size + 1, "color": THEME["muted"]},
+        }
+    x_label = (
+        style.axes.x.label
+        if style.axes.x.label is not None
+        else _auto_axis_label(spec, "x")
+    )
+    y_label = (
+        style.axes.y.label
+        if style.axes.y.label is not None
+        else _auto_axis_label(spec, "y")
+    )
+    # A legend is only useful with more than one entry; hide the redundant
+    # single-series legend unless the user explicitly titled it.
+    show_legend = style.legend.show and (
+        n_traces > 1 or style.legend.title is not None
+    )
     layout = go.Layout(
         title=title,
-        font={"family": style.font.family, "size": style.font.size},
+        font={"family": style.font.family, "size": style.font.size, "color": THEME["text"]},
         paper_bgcolor=style.background,
         plot_bgcolor=style.background,
         margin={
@@ -333,13 +457,22 @@ def _build_layout(spec: FigureSpec) -> go.Layout:
             "t": style.margins.t,
             "b": style.margins.b,
         },
-        width=style.size.width,
-        height=style.size.height,
-        showlegend=style.legend.show,
+        showlegend=show_legend,
         legend=_legend_config(style),
-        xaxis=_axis_config(style.axes.x, "x"),
-        yaxis=_axis_config(style.axes.y, "y"),
+        xaxis=_axis_config(style.axes.x, x_label, style.font.size),
+        yaxis=_axis_config(style.axes.y, y_label, style.font.size),
+        hovermode="x unified" if spec.figure.chartType in ("line", "area") else "closest",
+        hoverlabel={
+            "bgcolor": "#ffffff",
+            "bordercolor": THEME["axis_line"],
+            "font": {"color": THEME["text"], "size": style.font.size},
+        },
     )
+    if responsive:
+        layout.autosize = True
+    else:
+        layout.width = style.size.width
+        layout.height = style.size.height
     colorway = _colorway(style)
     if colorway:
         layout.colorway = colorway
@@ -361,7 +494,9 @@ def build_plotly_figure(
     return compile_plotly(spec, df)
 
 
-def compile_plotly(spec: FigureSpec, df: pd.DataFrame) -> go.Figure:
+def compile_plotly(
+    spec: FigureSpec, df: pd.DataFrame, responsive: bool = False
+) -> go.Figure:
     errors: list[dict] = []
     working = apply_transforms(df, spec.transforms, errors)
     errors.extend(validate_spec(spec, working))
@@ -370,14 +505,24 @@ def compile_plotly(spec: FigureSpec, df: pd.DataFrame) -> go.Figure:
 
     chart_type = spec.figure.chartType
     traces: list = []
-    for series in spec.figure.series:
-        traces.extend(_series_traces(chart_type, series, working, spec.style))
+    if chart_type == "heatmap":
+        traces = _heatmap_traces(spec, working)
+    else:
+        for series in spec.figure.series:
+            traces.extend(_series_traces(chart_type, series, working, spec.style))
     traces = _apply_legend_order(traces, spec.style.legend.order)
 
-    return go.Figure(data=traces, layout=_build_layout(spec))
+    return go.Figure(
+        data=traces,
+        layout=_build_layout(spec, responsive=responsive, n_traces=len(traces)),
+    )
 
 
 def compile_figure(spec: FigureSpec, df: pd.DataFrame) -> dict:
-    """Compile a FigureSpec + DataFrame into a JSON-safe Plotly figure dict."""
-    figure = compile_plotly(spec, df)
+    """Compile a FigureSpec + DataFrame into a JSON-safe Plotly figure dict.
+
+    The result is responsive (``autosize``) so the preview fills its container;
+    export overrides the size explicitly via :func:`export.export_figure`.
+    """
+    figure = compile_plotly(spec, df, responsive=True)
     return json.loads(figure.to_json())

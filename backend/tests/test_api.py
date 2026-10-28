@@ -66,6 +66,21 @@ def test_render_returns_plotly_figure(client, uploaded):
     assert figure["layout"]["title"]["text"] == "score over time"
 
 
+def test_preview_layout_is_responsive_and_labelled(client, uploaded):
+    figure = client.post(
+        "/api/figures/render",
+        json={"datasetId": uploaded["id"], "spec": base_spec()},
+    ).json()["figure"]
+    layout = figure["layout"]
+    # autosize, no fixed pixel size: the preview fills its container.
+    assert "width" not in layout
+    assert "height" not in layout
+    assert layout.get("autosize") is True
+    # axis labels are derived from the columns for a finished look.
+    assert layout["xaxis"]["title"]["text"] == "Time"
+    assert layout["yaxis"]["title"]["text"] == "Score"
+
+
 def test_render_invalid_spec_uses_contract_error_shape(client, uploaded):
     bad = base_spec(
         figure={"chartType": "scatter", "series": [{"x": "time", "y": "scor"}]}
@@ -270,7 +285,7 @@ class _StubProvider:
 def test_ai_status_reports_no_key(client):
     assert client.get("/api/ai/status").json() == {
         "llmAvailable": False,
-        "provider": "structured",
+        "provider": "fake",
     }
 
 

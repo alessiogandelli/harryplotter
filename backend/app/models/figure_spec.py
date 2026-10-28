@@ -84,8 +84,8 @@ class FontStyle(BaseModel):
 
 class MarkerStyle(BaseModel):
     model_config = _STRICT
-    size: float = 8
-    opacity: float = 1.0
+    size: float = 7
+    opacity: float = 0.9
     symbol: str = "circle"
 
 
@@ -115,7 +115,7 @@ class StyleSpec(BaseModel):
     axes: AxesStyle = Field(default_factory=AxesStyle)
     legend: LegendStyle = Field(default_factory=LegendStyle)
     font: FontStyle = Field(default_factory=FontStyle)
-    palette: PaletteName = "default"
+    palette: PaletteName = "scientific"
     colorway: Optional[List[str]] = None
     marker: MarkerStyle = Field(default_factory=MarkerStyle)
     line: LineStyle = Field(default_factory=LineStyle)

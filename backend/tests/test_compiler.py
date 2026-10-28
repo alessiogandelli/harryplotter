@@ -42,6 +42,50 @@ def test_scatter_traces_and_layout():
     assert figure["layout"]["title"]["text"] == "Score over time"
 
 
+def test_auto_title_and_axis_labels_when_unset():
+    figure = compile_spec(
+        {"figure": {"chartType": "bar", "series": [{"x": "group", "y": "score"}]}}
+    )
+    layout = figure["layout"]
+    assert layout["title"]["text"] == "Score by Group"
+    assert layout["xaxis"]["title"]["text"] == "Group"
+    assert layout["yaxis"]["title"]["text"] == "Score"
+
+
+def test_explicit_labels_win_over_auto_labels():
+    figure = compile_spec(
+        scatter_spec(
+            figure={"chartType": "scatter", "series": [{"x": "time", "y": "score"}]},
+            style={"axes": {"x": {"label": "T (s)"}, "y": {"label": "Score"}}},
+        )
+    )
+    layout = figure["layout"]
+    assert layout["xaxis"]["title"]["text"] == "T (s)"
+    assert layout["yaxis"]["title"]["text"] == "Score"
+
+
+def test_preview_figure_is_responsive():
+    layout = compile_spec(scatter_spec())["layout"]
+    assert "width" not in layout
+    assert "height" not in layout
+    assert layout.get("autosize") is True
+
+
+def test_single_series_legend_is_hidden():
+    single = compile_spec(scatter_spec())["layout"]
+    assert single["showlegend"] is False
+
+    grouped = compile_spec(
+        scatter_spec(
+            figure={
+                "chartType": "scatter",
+                "series": [{"x": "time", "y": "score", "color": "group"}],
+            }
+        )
+    )["layout"]
+    assert grouped["showlegend"] is True
+
+
 def test_color_column_splits_into_one_trace_per_category():
     spec = scatter_spec(
         figure={
@@ -119,17 +163,30 @@ def test_missing_required_axis_reports_error():
     assert "figure.series[0].y" in paths
 
 
-def test_heatmap_forbids_color():
+def test_heatmap_uses_color_as_the_row_axis():
     spec = {
         "figure": {
             "chartType": "heatmap",
             "series": [{"x": "time", "y": "score", "color": "group"}],
         }
     }
-    with pytest.raises(SpecValidationError) as excinfo:
-        compile_spec(spec)
-    paths = {err["path"] for err in excinfo.value.errors}
-    assert "figure.series[0].color" in paths
+    figure = compile_spec(spec)
+    trace = figure["data"][0]
+    assert trace["type"] == "heatmap"
+    # one row per category of the `color` column
+    assert sorted(trace["y"]) == ["A", "B"]
+    assert len(trace["z"]) == 2
+
+
+def test_area_charts_stack_their_series():
+    spec = {
+        "figure": {
+            "chartType": "area",
+            "series": [{"x": "time", "y": "score", "color": "group"}],
+        }
+    }
+    figure = compile_spec(spec)
+    assert all(trace["stackgroup"] == "one" for trace in figure["data"])
 
 
 def test_invalid_axis_range_is_rejected():

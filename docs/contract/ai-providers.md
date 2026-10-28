@@ -28,32 +28,40 @@ no key is configured).
 `polish` improves an existing spec towards the quality template, using a
 **two-pass Decisions routine**: pass 1 asks a `predicate` per tunable field
 (should it change?); pass 2 asks a `choice` for each flagged field (what value?).
-Only `DecisionProvider` implements it. `RouterProvider.generate` runs the polish
-pass automatically after producing a figure, so a generated chart is already
-high quality; `RouterProvider.polish` lets the caller re-run it on demand. The
-tunable fields and the template live in the provider's `template` module.
+Only `DecisionProvider` implements it. `RouterProvider.polish` exposes it on
+demand (the "Polish" action); automatic cosmetic quality now comes from the
+compiler's theme rather than a polish pass on every generation. The tunable
+fields and the template live in the provider's `template` module.
 
 ## Implementations
 
 - **`FakeProvider`** — deterministic, no network. Derives a spec from keyword
   hints in the prompt and the dataset schema (e.g. prompt mentioning
   "distribution" → `box`/`histogram`; "over time"/"trend" → `line`; otherwise
-  `scatter`). Used by tests and as the default when no API key is configured.
-  Reports `provider: "fake"` and a fixed confidence.
+  `scatter`; "measure by category" → `bar` with a `groupby` transform). Used by
+  tests and as the default when no API key is configured. Reports
+  `provider: "fake"` and a fixed confidence.
 - **`DecisionProvider`** — OpenAI **Decisions API** (`POST /v1/decisions`, model
   `gpt-6-luna`). Builds `choice`/`score`/`predicate` questions whose options come
   from the dataset schema, and maps the typed answers onto FigureSpec fields.
-  Reports the answer `confidence`. This is the fast path for the primitive chart
-  types and for categorical/ordinal parameter selection.
+  Reports the answer `confidence`. The fast path for closed-vocabulary
+  refinements (legend, palette, axis scale) and for the polish pass.
 - **`StructuredProvider`** — OpenAI **Responses API** with Structured Outputs
-  (a JSON schema for FigureSpec) for novel chart types. Used when the router
-  picks the "novel" path.
+  (a JSON schema for FigureSpec). Sent a system prompt that documents the chart
+  matrix, aggregation guidance and a worked example. Builds whole figures from a
+  request; the authoritative dataset reference is injected server-side rather
+  than trusted from the model.
 
 ## Router
 
-`pick(prompt, dataset)` returns `"known"` or `"novel"`. The router may itself be
-a Decisions `choice` question; when no provider is configured it falls back to a
-keyword heuristic over the primitive chart types.
+`RouterProvider` chooses per request:
+
+- **generate** → always the LLM (`StructuredProvider`), which can express the
+  whole spec; falls back to `DecisionProvider` if the model is unavailable.
+- **patch** → `DecisionProvider` when `is_simple_refinement(prompt)` (a
+  closed-vocabulary style tweak); otherwise `StructuredProvider`.
+- **suggest** → `StructuredProvider` (needs free text).
+- **polish** → `DecisionProvider`.
 
 ## Configuration
 

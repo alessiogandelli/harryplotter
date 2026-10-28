@@ -65,7 +65,15 @@ class DecisionProvider(ChartProvider):
                 json=payload,
                 timeout=30.0,
             )
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            detail = exc.response.text[:300]
+            raise RuntimeError(
+                f"provider returned HTTP {exc.response.status_code}: {detail}"
+            ) from exc
+        except httpx.HTTPError as exc:  # network/timeout
+            raise RuntimeError(f"provider request failed: {exc}") from exc
         return response.json()
 
     @staticmethod
@@ -160,7 +168,9 @@ class DecisionProvider(ChartProvider):
             "dataset": {"id": dataset.get("id"), "contentHash": dataset.get("contentHash")},
             "transforms": [],
             "figure": {"chartType": chart, "series": [series]},
-            "style": {"title": f"{series.get('y', 'value')} over {series.get('x', 'category')}"},
+            # No title/labels: the compiler derives readable ones from the
+            # columns, which is nicer than echoing raw column names.
+            "style": {},
             "meta": {"modelVersion": MODEL},
         }
         confidence = body.get("confidence")
@@ -201,9 +211,15 @@ class DecisionProvider(ChartProvider):
                 ),
             },
             {
-                "name": "axisScale",
+                "name": "xScale",
                 "type": "choice",
-                "instructions": "Axis scale?",
+                "instructions": "Scale for the x axis?",
+                "choices": self._choices([keep, "linear", "log"]),
+            },
+            {
+                "name": "yScale",
+                "type": "choice",
+                "instructions": "Scale for the y axis?",
                 "choices": self._choices([keep, "linear", "log"]),
             },
             {
@@ -217,6 +233,7 @@ class DecisionProvider(ChartProvider):
 
         style: dict = {}
         legend: dict = {}
+        axes: dict = {}
 
         position, _ = self._answer(body, "legendPosition")
         if position == "hide":
@@ -232,12 +249,17 @@ class DecisionProvider(ChartProvider):
         if palette in ("default", "scientific", "colorblind", "grayscale"):
             style["palette"] = palette
 
-        scale, _ = self._answer(body, "axisScale")
-        if scale in ("linear", "log"):
-            style["axes"] = {"y": {"scale": scale}}
+        x_scale, _ = self._answer(body, "xScale")
+        if x_scale in ("linear", "log"):
+            axes.setdefault("x", {})["scale"] = x_scale
+        y_scale, _ = self._answer(body, "yScale")
+        if y_scale in ("linear", "log"):
+            axes.setdefault("y", {})["scale"] = y_scale
 
         if legend:
             style["legend"] = legend
+        if axes:
+            style["axes"] = axes
 
         patch = {"style": style} if style else {}
         merged = apply_patch(dump_figure_spec(spec), patch)

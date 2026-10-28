@@ -9,12 +9,18 @@ from ..models.figure_spec import FigureSpec
 from .base import ChartProvider, ProviderResult, SuggestionResult
 from .decisions import DecisionProvider
 from .fake import FakeProvider
-from .router import pick
+from .router import is_simple_refinement
 from .structured import StructuredProvider
 
 
 class RouterProvider(ChartProvider):
-    """Routes each request to the known or novel path."""
+    """Chooses the best provider per request.
+
+    Full figure creation always goes to the LLM (Structured), which can express
+    the whole spec. Small closed-vocabulary refinements use the fast Decisions
+    path. Either path falls back to the other so a request never hard-fails if a
+    provider is momentarily unavailable.
+    """
 
     name = "auto"
 
@@ -23,30 +29,21 @@ class RouterProvider(ChartProvider):
         self._structured = structured
 
     def generate(self, prompt: str, dataset: dict) -> ProviderResult:
-        if pick(prompt, dataset) == "novel":
-            base = self._structured.generate(prompt, dataset)
-        else:
-            base = self._decisions.generate(prompt, dataset)
-        # Upgrade the fresh figure towards the quality template. Best-effort: if
-        # the polish pass fails, the base figure is still returned.
         try:
-            polished = self._decisions.polish(base.spec, dataset)
-        except Exception:  # noqa: BLE001 - polish must never break generation
-            return base
-        return ProviderResult(
-            spec=polished.spec,
-            provider=base.provider,
-            confidence=base.confidence,
-            patch=base.patch,
-        )
+            return self._structured.generate(prompt, dataset)
+        except RuntimeError:
+            return self._decisions.generate(prompt, dataset)
 
     def polish(self, spec: FigureSpec, dataset: dict) -> ProviderResult:
         return self._decisions.polish(spec, dataset)
 
     def patch(self, prompt: str, spec: FigureSpec, dataset: dict) -> ProviderResult:
-        if pick(prompt, dataset) == "novel":
-            return self._structured.patch(prompt, spec, dataset)
-        return self._decisions.patch(prompt, spec, dataset)
+        if is_simple_refinement(prompt):
+            try:
+                return self._decisions.patch(prompt, spec, dataset)
+            except RuntimeError:
+                return self._structured.patch(prompt, spec, dataset)
+        return self._structured.patch(prompt, spec, dataset)
 
     def suggest(self, dataset: dict) -> SuggestionResult:
         # A written suggestion needs free text, which only Structured can emit.
