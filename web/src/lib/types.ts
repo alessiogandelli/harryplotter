@@ -21,6 +21,10 @@ export interface Dataset {
   name: string;
   rows: Row[];
   columns: Column[];
+  /** stable id for the library of recent datasets */
+  id?: string;
+  /** one of the bundled examples (kept out of "your datasets") */
+  example?: boolean;
 }
 
 export type MarkType =

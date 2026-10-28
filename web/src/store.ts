@@ -32,6 +32,8 @@ interface State {
   settingsOpen: boolean;
   toast: string | null;
 
+  /** datasets the user loaded before, newest first (kept in this browser) */
+  library: LibraryEntry[];
   loadDataset: (d: Dataset, spec?: unknown) => void;
   /** Change the spec. Consecutive edits with the same `group` merge into one undo step. */
   update: (fn: (s: Spec) => Spec | void, group?: string) => void;
@@ -57,6 +59,7 @@ export const useStore = create<State>((set, get) => ({
   view: 'figure',
   chat: [],
   aiBusy: false,
+  library: [],
   paletteOpen: false,
   ideasOpen: false,
   improve: null,
@@ -65,6 +68,7 @@ export const useStore = create<State>((set, get) => ({
   toast: null,
 
   loadDataset: (d, spec) => {
+    d.id ??= datasetId(d);
     const s = spec ? normalizeSpec(spec, d) : autoSpec(d);
     lastGroup = undefined;
     set({ dataset: d, spec: s, past: [], future: [], suggestions: suggest(d), view: 'figure', chat: [] });
@@ -143,6 +147,63 @@ async function get<T>(key: string): Promise<T | undefined> {
   } catch { return undefined; }
 }
 
+async function del(key: string) {
+  try {
+    const db = await idb();
+    db.transaction('kv', 'readwrite').objectStore('kv').delete(key);
+  } catch { /* ignore */ }
+}
+
+// ---------------------------------------------------------------- library of the user's datasets
+
+export interface LibraryEntry { id: string; name: string; rows: number; columns: number; savedAt: number }
+
+const LIBRARY_MAX = 12;
+
+/** Same name, size and columns → same dataset (re-opening a file updates its entry). */
+export function datasetId(d: Dataset): string {
+  const sig = `${d.name}|${d.rows.length}|${d.columns.map((c) => c.name).join(',')}`;
+  let h = 0;
+  for (let i = 0; i < sig.length; i++) h = (Math.imul(31, h) + sig.charCodeAt(i)) | 0;
+  return `ds${(h >>> 0).toString(36)}`;
+}
+
+const payload = (d: Dataset) => ({ name: d.name, rows: d.rows, order: d.columns.map((c) => c.name), example: !!d.example, id: d.id });
+
+async function remember(d: Dataset) {
+  const list = ((await get<LibraryEntry[]>('library')) ?? []).filter((e) => e.id !== d.id);
+  list.unshift({ id: d.id!, name: d.name, rows: d.rows.length, columns: d.columns.length, savedAt: Date.now() });
+  for (const old of list.splice(LIBRARY_MAX)) { del(`ds:${old.id}`); del(`spec:${old.id}`); }
+  await put(`ds:${d.id}`, payload(d));
+  await put('library', list);
+  useStore.setState({ library: list });
+}
+
+export async function loadLibrary() {
+  useStore.setState({ library: (await get<LibraryEntry[]>('library')) ?? [] });
+}
+
+export async function openFromLibrary(id: string): Promise<boolean> {
+  const d = await get<ReturnType<typeof payload>>(`ds:${id}`);
+  if (!d?.rows?.length) return false;
+  const dataset = buildDataset(d.name, d.rows, d.order);
+  dataset.id = id;
+  useStore.getState().loadDataset(dataset, await get<Spec>(`spec:${id}`));
+  remember(dataset);
+  return true;
+}
+
+/** The last figure made with this dataset, if any. */
+export const savedSpec = (id: string) => get<Spec>(`spec:${id}`);
+
+export async function forget(id: string) {
+  const list = ((await get<LibraryEntry[]>('library')) ?? []).filter((e) => e.id !== id);
+  await put('library', list);
+  del(`ds:${id}`);
+  del(`spec:${id}`);
+  useStore.setState({ library: list });
+}
+
 let saveTimer: number | undefined;
 let lastSavedData: Dataset | null = null;
 
@@ -152,19 +213,24 @@ export function startAutosave() {
     saveTimer = window.setTimeout(() => {
       if (!s.dataset) return;
       if (s.dataset !== lastSavedData) {
-        put('dataset', { name: s.dataset.name, rows: s.dataset.rows, order: s.dataset.columns.map((c) => c.name) });
+        put('dataset', payload(s.dataset));
+        if (!s.dataset.example) remember(s.dataset);
         lastSavedData = s.dataset;
       }
       put('spec', s.spec);
+      // each of the user's datasets remembers its own last figure
+      if (!s.dataset.example && s.dataset.id) put(`spec:${s.dataset.id}`, s.spec);
     }, 400);
   });
 }
 
 export async function restoreSession(): Promise<boolean> {
-  const d = await get<{ name: string; rows: Record<string, unknown>[]; order: string[] }>('dataset');
+  const d = await get<ReturnType<typeof payload>>('dataset');
   if (!d?.rows?.length) return false;
   const spec = await get<Spec>('spec');
   const dataset = buildDataset(d.name, d.rows, d.order);
+  dataset.example = d.example;
+  if (d.id) dataset.id = d.id;
   lastSavedData = dataset;
   useStore.getState().loadDataset(dataset, spec);
   return true;

@@ -371,7 +371,7 @@ tr:hover td { background: var(--panel-2); }
   .sidebar { width: 100%; border-right: 0; border-top: 1px solid var(--line); flex: none; }
   .tab-body { overflow: visible; }
   .topbar { gap: 4px; padding: 0 8px; }
-  .cmdk, .brand span, .dataset-chip, .view-toggle { display: none; }
+  .cmdk, .brand span, .view-toggle { display: none; }
   .btn.primary { padding: 0 10px; }
   .stage { padding: 12px 8px 4px; }
   .suggestions { margin-bottom: 72px; }
@@ -416,3 +416,37 @@ tr:hover td { background: var(--panel-2); }
 .idea-thumb { display: block; height: 150px; border-radius: 5px; overflow: hidden; background: #fff; border: 1px solid var(--line); margin-bottom: 4px; }
 .idea-thumb svg { width: 100%; height: 100%; display: block; }
 @media (max-width: 860px) { .improve-btn span, .btn.primary span { display: none; } }
+
+/* ---------------------------------------------------------------- dataset menu */
+
+.dataset-menu { position: relative; min-width: 0; }
+.dataset-chip svg:last-child { flex: none; }
+.menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; width: min(420px, calc(100vw - 16px)); max-height: 72vh; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-pop); padding: 6px; animation: rise .14s ease-out;
+}
+.menu-label { display: flex; align-items: center; gap: 6px; padding: 12px 10px 4px; font-family: var(--serif); font-size: 14px; font-variant: small-caps; text-transform: lowercase; letter-spacing: .03em; color: var(--muted); }
+.menu-empty { margin: 2px 10px 6px; font-size: 12px; color: var(--muted); }
+.menu-row { display: flex; align-items: center; gap: 2px; }
+.menu-row .menu-item { flex: 1; min-width: 0; }
+.menu-item {
+  width: 100%; display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border: 0; border-radius: 7px; background: none; text-align: left;
+}
+.menu-item:hover, .menu-item.on { background: var(--accent-soft); }
+.menu-item svg { flex: none; margin-top: 2px; color: var(--accent); }
+.menu-item span { display: flex; flex-direction: column; min-width: 0; }
+.menu-item b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-item em { font-style: normal; font-size: 12px; color: var(--muted); }
+.menu-item.primary { border: 1px dashed var(--accent-line); }
+.menu-item.compact { padding: 6px 8px; }
+.menu-examples { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+@media (max-width: 860px) {
+  .dataset-menu .dataset-chip { display: flex; max-width: 44vw; padding: 0 8px; }
+  .dataset-menu .dataset-chip .muted:not(svg) { display: none; }
+  .menu { position: fixed; top: 56px; left: 8px; right: 8px; width: auto; }
+  .menu-examples { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .dataset-menu .dataset-chip { max-width: 34vw; }
+  .dataset-menu .dataset-chip strong { overflow: hidden; text-overflow: ellipsis; }
+}

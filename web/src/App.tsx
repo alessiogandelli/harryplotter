@@ -1,4 +1,4 @@
-import { Command, Database, Download, Image, Monitor, Moon, Redo2, Settings, Sun, Table2, Undo2, WandSparkles } from 'lucide-react';
+import { Command, Download, Image, Monitor, Moon, Redo2, Settings, Sun, Table2, Undo2, WandSparkles } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Canvas } from './components/Canvas';
 import { ChartTab } from './components/ChartTab';
@@ -9,13 +9,14 @@ import { IdeasDialog } from './components/Ideas';
 import { ImprovePanel, runImprove } from './components/Improve';
 import { StyleTab } from './components/StyleTab';
 import { SAMPLES, Welcome } from './components/Welcome';
+import { DatasetMenu } from './components/DatasetMenu';
 import { mergePatch } from './lib/ai';
 import { emptySpec } from './lib/spec';
 import { buildDataset, parseDelimited, parseFile } from './lib/data';
 import { copyPNG } from './lib/export';
 import { autoSpec } from './lib/suggest';
 import { applyTheme, loadTheme, type UITheme } from './lib/theme';
-import { restoreSession, startAutosave, useStore } from './store';
+import { datasetId, loadLibrary, restoreSession, savedSpec, startAutosave, useStore } from './store';
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 const MOD = isMac ? '⌘' : 'Ctrl ';
@@ -59,6 +60,7 @@ export default function App() {
   const openSample = useCallback(async (name: string) => {
     const text = await (await fetch(`samples/${name}`)).text();
     const d = parseDelimited(name.replace(/\.csv$/, ''), text);
+    d.example = true;
     const showcase = SAMPLES.find((s) => s.file === name)?.spec;
     loadDataset(d, showcase ? mergePatch(emptySpec(), showcase) : undefined);
   }, [loadDataset]);
@@ -76,7 +78,9 @@ export default function App() {
             const blob = await (await fetch(p.url)).blob();
             const d = await parseFile(new File([blob], p.filename ?? 'data.csv'));
             if (p.name) d.name = p.name;
-            loadDataset(d, p.spec ?? undefined);
+            // the same file handed over again (e.g. a reload) reopens on its last figure
+            loadDataset(d, p.spec ?? (await savedSpec(datasetId(d))));
+            loadLibrary();
             setReady(true);
             startAutosave();
             return;
@@ -84,6 +88,7 @@ export default function App() {
         }
       } catch { /* static hosting: no server */ }
       await restoreSession();
+      loadLibrary();
       setReady(true);
       startAutosave();
     })();
@@ -150,13 +155,7 @@ export default function App() {
       <input ref={fileInput} type="file" hidden accept=".csv,.tsv,.txt,.xlsx,.xls,.ods,.json" onChange={(e) => e.target.files?.length && openFiles(e.target.files)} />
       <header className="topbar">
         <div className="brand"><Logo /><span>Harry Plotter</span></div>
-        {dataset && (
-          <button type="button" className="dataset-chip" onClick={() => fileInput.current?.click()} title="Open another file">
-            <Database size={14} />
-            <strong>{dataset.name}</strong>
-            <span className="muted">{dataset.rows.length.toLocaleString()} rows · {dataset.columns.length} columns</span>
-          </button>
-        )}
+        {dataset && <DatasetMenu onOpenFile={() => fileInput.current?.click()} onSample={openSample} />}
         <div className="spacer" />
         {dataset && (
           <>
