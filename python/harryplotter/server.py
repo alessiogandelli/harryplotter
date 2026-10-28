@@ -54,7 +54,7 @@ class AIConfig:
         return bool(self.api_key)
 
 
-def complete(cfg: AIConfig, messages: list) -> str:
+def complete(cfg: AIConfig, messages: list) -> dict:
     body = json.dumps({
         "model": cfg.model,
         "messages": messages,
@@ -71,9 +71,13 @@ def complete(cfg: AIConfig, messages: list) -> str:
             "X-Title": "Harry Plotter",
         },
     )
-    with urllib.request.urlopen(req, timeout=90) as r:
+    with urllib.request.urlopen(req, timeout=120) as r:
         data = json.load(r)
-    return data["choices"][0]["message"]["content"]
+    return {
+        "content": data["choices"][0]["message"]["content"],
+        "usage": data.get("usage"),
+        "model": data.get("model", cfg.model),
+    }
 
 
 # ---------------------------------------------------------------- files handed to the editor
@@ -151,7 +155,7 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", 0))
             messages = json.loads(self.rfile.read(length))["messages"]
-            return self._json({"content": complete(self.ai, messages)})
+            return self._json(complete(self.ai, messages))
         except urllib.error.HTTPError as e:
             detail = e.read().decode(errors="replace")[:300]
             return self._json({"error": f"AI provider error {e.code}: {detail}"}, 502)

@@ -1,15 +1,18 @@
-import { Command, Database, Download, Image, Redo2, Settings, Table2, Undo2 } from 'lucide-react';
+import { Command, Database, Download, Image, Monitor, Moon, Redo2, Settings, Sun, Table2, Undo2, WandSparkles } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Canvas } from './components/Canvas';
 import { ChartTab } from './components/ChartTab';
 import { CommandPalette, ExportDialog, SettingsDialog } from './components/Dialogs';
 import { Logo } from './components/icons';
 import { PromptBar } from './components/PromptBar';
+import { IdeasDialog } from './components/Ideas';
+import { ImprovePanel, runImprove } from './components/Improve';
 import { StyleTab } from './components/StyleTab';
 import { Welcome } from './components/Welcome';
 import { buildDataset, parseDelimited, parseFile } from './lib/data';
 import { copyPNG } from './lib/export';
 import { autoSpec } from './lib/suggest';
+import { applyTheme, loadTheme, type UITheme } from './lib/theme';
 import { restoreSession, startAutosave, useStore } from './store';
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -21,11 +24,17 @@ export default function App() {
   const view = useStore((s) => s.view);
   const past = useStore((s) => s.past.length);
   const future = useStore((s) => s.future.length);
-  const { paletteOpen, exportOpen, settingsOpen, toast } = useStore();
+  const { paletteOpen, exportOpen, settingsOpen, ideasOpen, improve, toast } = useStore();
   const { set, undo, redo, loadDataset, notify } = useStore.getState();
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [exportTab, setExportTab] = useState<'image' | 'code'>('image');
+  const [uiTheme, setUiTheme] = useState<UITheme>(loadTheme());
+  const cycleTheme = () => {
+    const next: UITheme = uiTheme === 'light' ? 'dark' : uiTheme === 'dark' ? 'system' : 'light';
+    applyTheme(next);
+    setUiTheme(next);
+  };
   const fileInput = useRef<HTMLInputElement>(null);
 
   const openFiles = useCallback(async (files: FileList | File[]) => {
@@ -83,6 +92,8 @@ export default function App() {
     if (a === 'data') set({ view: s.view === 'data' ? 'figure' : 'data' });
     if (a === 'open') fileInput.current?.click();
     if (a === 'reset' && s.dataset) s.replace(autoSpec(s.dataset));
+    if (a === 'improve') runImprove();
+    if (a === 'ideas') set({ ideasOpen: true });
     if (a === 'copy' && s.dataset) copyPNG(s.spec, s.dataset).then(() => notify('Image copied — paste it anywhere'), () => notify('Your browser blocked clipboard images'));
   }, [set, notify]);
 
@@ -155,8 +166,16 @@ export default function App() {
             <button type="button" className="btn ghost cmdk" onClick={() => set({ paletteOpen: true })}><Command size={14} /> <span>Commands</span> <kbd>{MOD}K</kbd></button>
           </>
         )}
+        <button type="button" className="icon-btn" onClick={cycleTheme} title={`Editor theme: ${uiTheme} (click to change)`}>
+          {uiTheme === 'light' ? <Sun size={16} /> : uiTheme === 'dark' ? <Moon size={16} /> : <Monitor size={16} />}
+        </button>
         <button type="button" className="icon-btn" onClick={() => set({ settingsOpen: true })} title="AI settings"><Settings size={16} /></button>
-        {dataset && <button type="button" className="btn primary" onClick={() => appAction('export')}><Download size={15} /> Export</button>}
+        {dataset && (
+          <button type="button" className="btn improve-btn" onClick={() => runImprove()} disabled={!!improve && improve.status !== 'done'} title="Fix overlapping labels, clutter and other annoyances">
+            <WandSparkles size={15} /> <span>Improve</span>
+          </button>
+        )}
+        {dataset && <button type="button" className="btn primary" onClick={() => appAction('export')}><Download size={15} /> <span>Export</span></button>}
       </header>
 
       {dataset ? (
@@ -170,6 +189,7 @@ export default function App() {
           </aside>
           <div className="center">
             <Canvas />
+            <ImprovePanel />
             <PromptBar />
           </div>
         </div>
@@ -181,6 +201,7 @@ export default function App() {
       {paletteOpen && <CommandPalette onApp={appAction} />}
       {exportOpen && dataset && <ExportDialog initialTab={exportTab} />}
       {settingsOpen && <SettingsDialog />}
+      {ideasOpen && dataset && <IdeasDialog />}
       {toast && <div className="toast">{toast}</div>}
     </div>
   );

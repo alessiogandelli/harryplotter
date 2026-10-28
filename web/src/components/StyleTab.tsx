@@ -108,6 +108,11 @@ export function StyleTab() {
               <Field label="Y to"><NumberInput value={st.yMax} onChange={(v) => set('yMax', v)} /></Field>
             </div>
           )}
+          <Field label="X labels">
+            <Segmented value={st.xTickAngle === null ? 'auto' : String(st.xTickAngle)} onChange={(v) => set('xTickAngle', v === 'auto' ? null : Number(v))} options={[
+              { value: 'auto', label: 'Auto' }, { value: '0', label: 'Flat' }, { value: '45', label: '45°' }, { value: '90', label: '90°' },
+            ]} />
+          </Field>
           {continuousY && !['bar', 'histogram', 'area', 'density'].includes(m) && (
             <Field label="Y starts at 0">
               <Segmented value={st.zeroY ? 'yes' : 'no'} onChange={(v) => set('zeroY', v === 'yes')} options={[{ value: 'no', label: 'Fit data' }, { value: 'yes', label: 'Zero' }]} />

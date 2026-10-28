@@ -132,7 +132,7 @@ function Suggestions() {
 
   return (
     <div className="suggestions" aria-label="Other ways to show this data">
-      <span className="suggestions-label"><Sparkles size={13} /> Ideas</span>
+      <button type="button" className="ideas-btn" onClick={() => useStore.getState().set({ ideasOpen: true })}><Sparkles size={14} /> Ideas from your data</button>
       {suggestions.map((sg, i) => thumbs[i] && (
         <button key={sg.id} type="button" className={`thumb ${same(sg.spec) ? 'on' : ''}`} title={sg.title}
           onClick={() => replace({ ...sg.spec, style: { ...spec.style, title: '', subtitle: '', xLabel: '', yLabel: '', colorLabel: '', xMin: null, xMax: null, yMin: null, yMax: null, xScale: 'linear', yScale: 'linear' }, filters: spec.filters })}>

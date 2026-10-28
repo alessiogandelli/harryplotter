@@ -31,11 +31,11 @@ export function TypeIcon({ type }: { type: ColumnType }) {
 export function Logo({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="8" fill="var(--accent)" />
+      <rect width="32" height="32" rx="7" fill="#1f3d6d" />
       <path d="M7 22l6-7 4 3.5L25 8" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="7" cy="22" r="2.2" fill="#fff" />
       <circle cx="17" cy="18.5" r="2.2" fill="#fff" />
-      <circle cx="25" cy="8" r="2.2" fill="#ffd166" />
+      <circle cx="25" cy="8" r="2.2" fill="#e0b04f" />
     </svg>
   );
 }

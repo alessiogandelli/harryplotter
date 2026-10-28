@@ -56,6 +56,8 @@ export function commands(dataset: Dataset | null, spec: Spec): Command[] {
   for (const l of ['auto', 'top', 'right', 'none'] as const) out.push({ id: `legend:${l}`, group: 'Style', label: l === 'none' ? 'Hide legend' : `Legend: ${l}`, run: set((s) => { s.style.legend = l; }) });
   for (const p of PRESETS) out.push({ id: `preset:${p.id}`, group: 'Size', label: `Size: ${p.label}`, keywords: `${p.group} journal ${p.widthMm}mm`, run: set((s) => { s.style = applyPreset(s.style, p.id); }) });
 
+  out.push({ id: 'app:improve', group: 'Figure', label: 'Improve this plot', keywords: 'fix overlap ticks labels clean tidy polish', run: () => 'app:improve' });
+  out.push({ id: 'app:ideas', group: 'Figure', label: 'Suggest what to plot from my data', keywords: 'ideas ai suggestions explore', run: () => 'app:ideas' });
   out.push({ id: 'app:export', group: 'Export', label: 'Export figure…', keywords: 'download pdf svg png tiff save', run: () => 'app:export' });
   out.push({ id: 'app:code', group: 'Export', label: 'Get Python / R code', keywords: 'matplotlib seaborn ggplot script reproduce', run: () => 'app:code' });
   out.push({ id: 'app:copy', group: 'Export', label: 'Copy image to clipboard', run: () => 'app:copy' });

@@ -1,7 +1,7 @@
 // The AI never writes code: it returns a JSON patch to the Spec, which goes
 // through the same normalisation as every UI edit (and can be undone).
 
-import { MARKS, PALETTES, PRESETS, normalizeSpec } from './spec';
+import { DEFAULT_STATS, MARKS, PALETTES, PRESETS, normalizeSpec } from './spec';
 import type { Dataset, Spec } from './types';
 
 export interface AISettings { baseUrl: string; apiKey: string; model: string }
@@ -63,7 +63,7 @@ The figure is described by this spec (TypeScript):
   },
   style: {
     title, subtitle, caption, xLabel, yLabel, colorLabel: string,       // "" = automatic
-    xScale, yScale: "linear"|"log"|"sqrt", xMin, xMax, yMin, yMax: number|null, zeroY: boolean,
+    xScale, yScale: "linear"|"log"|"sqrt", xMin, xMax, yMin, yMax: number|null, zeroY: boolean, xTickAngle: number|null /* 0-90, null = auto */,
     palette: ${PALETTES.map((p) => `"${p.id}"`).join(' | ')},
     theme: "clean"|"classic"|"minimal"|"dark", grid: "none"|"x"|"y"|"both", legend: "auto"|"top"|"right"|"none",
     font: "sans"|"serif"|"mono", fontSize: number /* pt */, markSize, opacity, lineWidth: number,
@@ -119,23 +119,20 @@ export function mergePatch(spec: Spec, patch: any): Spec {
   return out;
 }
 
-export interface AIAnswer { spec: Spec; reply: string }
+export interface Usage { kind: string; prompt: number; completion: number; model: string }
 
-export async function askAI(
-  prompt: string, spec: Spec, dataset: Dataset, history: { role: 'user' | 'assistant'; text: string }[],
-): Promise<AIAnswer> {
-  const messages = [
-    { role: 'system', content: systemPrompt(dataset) },
-    ...history.slice(-6).map((h) => ({ role: h.role, content: h.text })),
-    { role: 'user', content: `Current spec:\n${JSON.stringify(spec)}\n\nRequest: ${prompt}` },
-  ];
+/** Every AI call of this session, so the cost is never a surprise (shown in Settings). */
+export const usageLog: Usage[] = [];
 
-  let content: string;
+type Message = { role: string; content: string | unknown[] };
+
+/** One chat completion through the local server (key stays there) or straight from the browser. */
+async function chat(kind: string, messages: Message[]): Promise<string> {
+  let body: any;
   if (await serverHasAI()) {
     const r = await fetch('api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages }) });
-    const body = await r.json().catch(() => ({}));
+    body = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(body.error ?? `AI server error ${r.status}`);
-    content = body.content;
   } else {
     const s = loadSettings();
     if (!s.apiKey) throw new Error('No AI configured. Open settings to add an API key, or use the controls and ⌘K.');
@@ -144,12 +141,124 @@ export async function askAI(
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.apiKey}` },
       body: JSON.stringify({ model: s.model, messages, temperature: 0.2, response_format: { type: 'json_object' } }),
     });
-    const body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(body.error?.message ?? `AI request failed (${r.status})`);
-    content = body.choices?.[0]?.message?.content ?? '';
+    const raw = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(raw.error?.message ?? `AI request failed (${r.status})`);
+    body = { content: raw.choices?.[0]?.message?.content ?? '', usage: raw.usage, model: raw.model ?? s.model };
   }
+  if (body.usage) usageLog.push({ kind, prompt: body.usage.prompt_tokens ?? 0, completion: body.usage.completion_tokens ?? 0, model: body.model ?? '' });
+  return body.content ?? '';
+}
 
+export interface AIAnswer { spec: Spec; reply: string }
+
+export async function askAI(
+  prompt: string, spec: Spec, dataset: Dataset, history: { role: 'user' | 'assistant'; text: string }[],
+): Promise<AIAnswer> {
+  const content = await chat('edit', [
+    { role: 'system', content: systemPrompt(dataset) },
+    ...history.slice(-6).map((h) => ({ role: h.role, content: h.text })),
+    { role: 'user', content: `Current spec:\n${JSON.stringify(spec)}\n\nRequest: ${prompt}` },
+  ]);
   const parsed = extractJSON(content);
   const next = normalizeSpec(mergePatch(spec, parsed.patch ?? parsed.spec ?? {}), dataset);
   return { spec: next, reply: typeof parsed.reply === 'string' ? parsed.reply : 'Done.' };
+}
+
+// ---------------------------------------------------------------- ideas from the data
+
+/**
+ * A compact statistical portrait of the dataset: types, ranges, group sizes and the
+ * strongest correlations. This — never the raw rows — is what the model sees.
+ */
+export function profile(dataset: Dataset): string {
+  const lines: string[] = [`Dataset "${dataset.name}", ${dataset.rows.length} rows.`];
+  const nums = dataset.columns.filter((c) => c.type === 'number');
+  for (const c of dataset.columns) {
+    const vals = dataset.rows.map((r) => r[c.name]).filter((v) => v !== null && v !== undefined);
+    if (c.type === 'number') {
+      const xs = vals as number[];
+      const mean = xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
+      const sd = Math.sqrt(xs.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, xs.length - 1));
+      lines.push(`- "${c.name}": number, ${c.unique} distinct, range ${fmt(c.min)}..${fmt(c.max)}, mean ${fmt(mean)}, sd ${fmt(sd)}${c.missing ? `, ${c.missing} missing` : ''}`);
+    } else if (c.type === 'category') {
+      const counts = new Map<string, number>();
+      for (const v of vals) counts.set(String(v), (counts.get(String(v)) ?? 0) + 1);
+      const top = [...counts].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `${k} (${n})`).join(', ');
+      lines.push(`- "${c.name}": category, ${c.unique} levels: ${top}${c.unique > 8 ? ', …' : ''}`);
+    } else if (c.type === 'date') {
+      lines.push(`- "${c.name}": date, ${new Date(c.min!).toISOString().slice(0, 10)} to ${new Date(c.max!).toISOString().slice(0, 10)}, ${c.unique} distinct days`);
+    } else {
+      lines.push(`- "${c.name}": free text, ${c.unique} distinct (e.g. ${c.sample.slice(0, 3).join(' | ')})`);
+    }
+  }
+  const pairs: string[] = [];
+  for (let i = 0; i < Math.min(nums.length, 12); i++) for (let j = i + 1; j < Math.min(nums.length, 12); j++) {
+    const r = corr(dataset, nums[i].name, nums[j].name);
+    if (Number.isFinite(r) && Math.abs(r) >= 0.2) pairs.push(`${nums[i].name}~${nums[j].name} r=${r.toFixed(2)}`);
+  }
+  if (pairs.length) lines.push(`Notable correlations: ${pairs.slice(0, 12).join('; ')}`);
+  return lines.join('\n');
+}
+
+const fmt = (v?: number) => (v === undefined || !Number.isFinite(v) ? '?' : Math.abs(v) >= 1000 || Math.abs(v) < 0.01 ? v.toPrecision(3) : String(Math.round(v * 1000) / 1000));
+
+function corr(d: Dataset, a: string, b: string): number {
+  let n = 0, sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0;
+  for (const r of d.rows) {
+    const x = r[a], y = r[b];
+    if (typeof x !== 'number' || typeof y !== 'number') continue;
+    n++; sa += x; sb += y; saa += x * x; sbb += y * y; sab += x * y;
+  }
+  const cov = sab - (sa * sb) / n, va = saa - (sa * sa) / n, vb = sbb - (sb * sb) / n;
+  return n > 2 && va > 0 && vb > 0 ? cov / Math.sqrt(va * vb) : NaN;
+}
+
+export interface Idea { title: string; question: string; why: string; spec: Spec }
+
+export async function suggestIdeas(dataset: Dataset, base: Spec, context = ''): Promise<Idea[]> {
+  const content = await chat('ideas', [
+    { role: 'system', content: `${systemPrompt(dataset)}
+
+TASK NOW: act as a senior data scientist reviewing this dataset for a researcher. Propose 6 figures worth making,
+each answering a different scientific question (comparisons between groups, relationships, change over time, distributions,
+interactions between two factors, data quality checks such as outliers or missing values).
+Prefer figures that reveal something specific about THESE columns, not generic ones. Use statistics where they help
+(error bars, trend lines, tests). Answer ONLY with JSON:
+{"ideas": [{"title": "<short figure title>", "question": "<the research question it answers>", "why": "<one sentence: what in the data makes it interesting>", "patch": <partial spec>}]}` },
+    { role: 'user', content: `${profile(dataset)}${context ? `\n\nWhat the researcher is studying: ${context}` : ''}` },
+  ]);
+  const parsed = extractJSON(content);
+  const list = Array.isArray(parsed.ideas) ? parsed.ideas : [];
+  return list.slice(0, 8).map((it: any) => {
+    const patch = it.patch ?? it.spec ?? {};
+    // keep the look (size, palette, fonts) but none of the current figure's labels or ranges
+    const clean = { ...base, enc: {}, stats: { ...DEFAULT_STATS }, filters: [], annotations: [], style: { ...base.style, title: '', subtitle: '', caption: '', xLabel: '', yLabel: '', colorLabel: '', xMin: null, xMax: null, yMin: null, yMax: null, xScale: 'linear', yScale: 'linear', zeroY: false, xTickAngle: null } } as Spec;
+    const spec = normalizeSpec(mergePatch(clean, { ...patch, style: { ...(patch.style ?? {}), title: '' } }), dataset);
+    return { title: String(it.title ?? 'Idea'), question: String(it.question ?? ''), why: String(it.why ?? ''), spec };
+  }).filter((i: Idea) => i.spec.mark === 'corr' || Object.keys(i.spec.enc).length > 0);
+}
+
+// ---------------------------------------------------------------- improve: a second pair of eyes
+
+export interface Critique { spec: Spec; changes: string[] }
+
+/** Show the rendered figure to a vision model and let it fix what still looks wrong. */
+export async function critiqueFigure(spec: Spec, dataset: Dataset, png: string, alreadyFixed: string[]): Promise<Critique> {
+  const content = await chat('improve', [
+    { role: 'system', content: `${systemPrompt(dataset)}
+
+TASK NOW: you are a meticulous figure editor for a scientific journal. Look at the rendered figure and its spec.
+Fix only real problems a reviewer would flag: overlapping or cramped labels, unreadable tick labels, misleading scales,
+cluttered legends, poor colour choices for the data, missing units in axis labels (only when obvious from the column name),
+chart type that hides the message, overplotting, wasted space, inconsistent capitalisation.
+Do NOT change what is plotted or the size preset unless it is clearly wrong. Never undo the automatic fixes listed by the user (they were measured on the real layout). If the figure is fine, return an empty patch.
+Answer ONLY with JSON: {"patch": <partial spec>, "changes": ["<each change in a few words>"]}` },
+    { role: 'user', content: [
+      { type: 'text', text: `Spec:\n${JSON.stringify(spec)}\n\nAlready fixed automatically: ${alreadyFixed.join('; ') || 'nothing'}` },
+      { type: 'image_url', image_url: { url: png } },
+    ] },
+  ]);
+  const parsed = extractJSON(content);
+  const changes = Array.isArray(parsed.changes) ? parsed.changes.map(String).filter(Boolean) : [];
+  return { spec: normalizeSpec(mergePatch(spec, parsed.patch ?? {}), dataset), changes };
 }

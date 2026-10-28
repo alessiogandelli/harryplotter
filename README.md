@@ -31,6 +31,13 @@ Python or R code.
   “bianco e nero”), as does the ⌘K command palette.
 - **Your data stays on your computer.** Everything runs in the browser. The optional
   local server only proxies AI requests.
+- **Improve this plot.** One click measures the real layout and fixes what annoys
+  reviewers: overlapping tick labels, crowded legends, overplotting, bad bin counts,
+  skewed axes, text below 6 pt. With AI on, a vision model then looks at the rendered
+  figure and polishes what is left. Everything can be undone.
+- **Ideas from your data.** Harry reads a statistical summary of your dataset (types,
+  ranges, group sizes, correlations; never the raw rows) and proposes figures, each one
+  tied to a concrete research question.
 - **Edit on the figure.** Double-click the title, an axis label or the legend title to rewrite it in place.
 - **Paste from Excel.** Copy cells, press ⌘V, done.
 
@@ -66,6 +73,17 @@ export HARRYPLOTTER_MODEL=openai/gpt-4.1-mini   # optional
 # any OpenAI-compatible endpoint, e.g. a local Ollama:
 export HARRYPLOTTER_BASE_URL=http://localhost:11434/v1 HARRYPLOTTER_API_KEY=ollama HARRYPLOTTER_MODEL=qwen2.5:7b
 ```
+
+**What it costs.** Measured with real calls on the example dataset (OpenRouter prices, Oct 2026):
+
+| action | tokens in / out | gpt-4.1-mini (default) | deepseek-v4.1-flash |
+|---|---|---|---|
+| edit by prompt | ~1.3k / 0.2–0.4k | $0.0008 | $0.0004 |
+| improve (with image) | ~2k / 0.03–1.3k | $0.0009 | $0.0008 |
+| ideas from data | ~1.5k / 0.6–1.6k | $0.0015 | $0.0009 |
+
+That is roughly 3 cents for a long session (30 edits, 5 improves, 2 idea rounds), and the
+deterministic half of Improve, ⌘K and the offline phrases cost nothing.
 
 The editor also works as a plain static site (GitHub Pages, a file share). In that
 case the AI key is entered in Settings and stays in the browser.

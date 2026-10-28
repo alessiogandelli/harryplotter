@@ -4,6 +4,15 @@ import { autoSpec, suggest, type Suggestion } from './lib/suggest';
 import { buildDataset } from './lib/data';
 import type { Dataset, Spec } from './lib/types';
 
+export interface ImproveState {
+  status: 'checking' | 'ai' | 'done';
+  before: Spec;
+  fixed: { issue: string; fix: string }[];
+  advice: string[];
+  aiChanges: string[];
+  error?: string;
+}
+
 export interface ChatTurn { role: 'user' | 'assistant'; text: string; error?: boolean }
 
 interface State {
@@ -17,6 +26,8 @@ interface State {
   chat: ChatTurn[];
   aiBusy: boolean;
   paletteOpen: boolean;
+  ideasOpen: boolean;
+  improve: ImproveState | null;
   exportOpen: boolean;
   settingsOpen: boolean;
   toast: string | null;
@@ -47,6 +58,8 @@ export const useStore = create<State>((set, get) => ({
   chat: [],
   aiBusy: false,
   paletteOpen: false,
+  ideasOpen: false,
+  improve: null,
   exportOpen: false,
   settingsOpen: false,
   toast: null,

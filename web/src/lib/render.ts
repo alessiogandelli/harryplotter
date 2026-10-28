@@ -224,6 +224,7 @@ function buildLegend(ctx: Ctx, W: number, H: number): Legend | null {
   if (spec.style.legend === 'none') return null;
   const title = spec.style.colorLabel || prettify(spec.enc.color);
   const g = document.createElementNS(SVG_NS, 'g') as SVGGElement;
+  g.dataset.role = 'legend';
   const pad = Math.round(fontPx * 0.6);
 
   // continuous colour: a horizontal ramp from Plot, top right
@@ -356,8 +357,9 @@ function buildPlot(ctx: Ctx, dataset: Dataset, width: number, height: number): S
   const maxXTick = Math.max(0, ...xTicks.map((t) => textWidth(t, tickPx, font)));
   const facetCount = facetX ? levels(ctx.rows, facetX).length : 1;
   const slot = (width - marginLeft) / facetCount / nx;
-  const rotate = xTicks.length > 0 && maxXTick > slot * 0.92 ? -35 : 0;
-  const xTickH = rotate ? maxXTick * Math.sin(Math.PI / 180 * 35) + tickPx * 0.9 : tickPx * 1.15;
+  const rotate = st.xTickAngle !== null ? -st.xTickAngle : xTicks.length > 0 && maxXTick > slot * 0.92 ? -35 : 0;
+  const longest = xTicks.length ? maxXTick : textWidth('00000', tickPx, font);
+  const xTickH = rotate ? longest * Math.sin(Math.PI / 180 * -rotate) + tickPx * Math.cos(Math.PI / 180 * -rotate) * 0.9 + tickPx * 0.2 : tickPx * 1.15;
   const marginBottom = Math.ceil(tickSize + tickPad + xTickH + (xLabel ? fontPx * 1.75 : fontPx * 0.4));
   const marginTop = Math.ceil((facetX ? fontPx * 1.9 : 0) + fontPx * 0.8);
   const marginRight = Math.ceil(facetY ? fontPx * 2.2 : fontPx * 1.2);

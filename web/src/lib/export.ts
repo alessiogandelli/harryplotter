@@ -21,7 +21,7 @@ export function figureSVG(spec: Spec, dataset: Dataset, physical = true): { svg:
     el.removeAttribute('class');
   });
   svg.querySelectorAll('style').forEach((s) => s.remove());
-  svg.querySelectorAll('[data-edit]').forEach((el) => el.removeAttribute('data-edit'));
+  svg.querySelectorAll('[data-edit], [data-role]').forEach((el) => { el.removeAttribute('data-edit'); el.removeAttribute('data-role'); });
   // Plot aligns text with `dy="0.32em"`; PDF converters ignore em units, so resolve them to user units
   svg.querySelectorAll('text, tspan').forEach((el) => {
     for (const attr of ['dy', 'dx', 'y', 'x']) {
@@ -186,6 +186,13 @@ export async function exportFigure(spec: Spec, dataset: Dataset, format: ExportF
     const canvas = await rasterize(spec, dataset, dpi);
     download(`${base}.${format === 'tiff' ? 'tif' : 'png'}`, format === 'tiff' ? tiffFromCanvas(canvas, dpi) : await pngWithDpi(canvas, dpi));
   }
+}
+
+/** A PNG data URL of the figure, e.g. to show it to a vision model. */
+export async function figurePNG(spec: Spec, dataset: Dataset, maxWidthPx = 1100): Promise<string> {
+  const dpi = Math.min(220, (maxWidthPx / spec.style.widthMm) * 25.4);
+  const canvas = await rasterize(spec, dataset, dpi);
+  return canvas.toDataURL('image/png');
 }
 
 export async function copyPNG(spec: Spec, dataset: Dataset): Promise<void> {

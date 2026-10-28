@@ -105,6 +105,8 @@ export interface Style {
   yMin: number | null;
   yMax: number | null;
   zeroY: boolean;
+  /** x tick label angle in degrees; null = automatic */
+  xTickAngle: number | null;
   palette: string;
   theme: ThemeKind;
   grid: GridKind;
