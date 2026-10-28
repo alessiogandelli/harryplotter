@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "harryplotter"
+version = "0.1.0"
+description = "Publication-ready scientific figures in seconds — a local editor with optional AI."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+dependencies = []
+
+[project.optional-dependencies]
+pandas = ["pandas>=1.5"]
+
+[project.scripts]
+harryplotter = "harryplotter.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/harryplotter"]
+artifacts = ["python/harryplotter/static/**"]
+
+[tool.hatch.build.targets.sdist]
+include = ["python", "README.md"]
+artifacts = ["python/harryplotter/static/**"]
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]

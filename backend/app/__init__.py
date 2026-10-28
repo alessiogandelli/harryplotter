@@ -1,1 +1,0 @@
-"""FigureLab backend application package."""

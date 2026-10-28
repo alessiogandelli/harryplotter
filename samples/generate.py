@@ -1,95 +1,65 @@
-"""Generate a synthetic-but-realistic dataset for playing with FigureLab.
-
-Deterministic (fixed seed), so re-running reproduces the same file.
+"""Deterministic example datasets bundled with Harry Plotter.
 
     python samples/generate.py
 
-Writes ``samples/polarization_topics.csv`` with one row per piece of content:
-
-    date                datetime
-    source              categorical  (news | social | forum | blog)
-    topic               categorical  (climate | economy | health | immigration | technology)
-    polarization        categorical  (low | medium | high)
-    sentiment           numeric      (-1 .. 1)
-    engagement          numeric      (# interactions)
-    likes               numeric      (# upvotes)
-    stance_confidence   numeric      (0 .. 1)
+Writes reaction_times.csv and growth_curves.csv into web/public/samples/.
 """
-
-from __future__ import annotations
 
 import csv
 import math
 import random
-from datetime import date, timedelta
 from pathlib import Path
 
-SEED = 42
-ROWS = 600
-
-SOURCES = ["news", "social", "forum", "blog"]
-SOURCE_WEIGHTS = [0.30, 0.35, 0.20, 0.15]
-SOURCE_ENGAGEMENT = {"news": 120, "social": 400, "forum": 90, "blog": 60}
-
-TOPICS = ["climate", "economy", "health", "immigration", "technology"]
-POLARIZATION = ["low", "medium", "high"]
-SENTIMENT_MEAN = {"low": 0.35, "medium": 0.0, "high": -0.35}
-
-OUTPUT = Path(__file__).resolve().parent / "polarization_topics.csv"
+OUT = Path(__file__).resolve().parent.parent / "web" / "public" / "samples"
 
 
-def clamp(value: float, low: float, high: float) -> float:
-    return max(low, min(high, value))
-
-
-def generate() -> list[dict]:
-    random.seed(SEED)
-    start = date(2024, 1, 1)
-    rows: list[dict] = []
-    for _ in range(ROWS):
-        source = random.choices(SOURCES, weights=SOURCE_WEIGHTS, k=1)[0]
-        topic = random.choice(TOPICS)
-        polarization = random.choice(POLARIZATION)
-
-        sentiment = clamp(
-            random.gauss(SENTIMENT_MEAN[polarization], 0.25), -1.0, 1.0
-        )
-        engagement = max(
-            1.0,
-            random.lognormvariate(math.log(SOURCE_ENGAGEMENT[source]), 0.8),
-        )
-        likes = max(
-            0.0,
-            engagement * random.uniform(0.3, 0.9) + random.gauss(0, 15),
-        )
-        stance_confidence = clamp(
-            0.5 + abs(sentiment) * 0.5 + random.gauss(0, 0.08), 0.0, 1.0
-        )
-
-        rows.append(
-            {
-                "date": (start + timedelta(days=random.randint(0, 364))).isoformat(),
-                "source": source,
-                "topic": topic,
-                "polarization": polarization,
-                "sentiment": round(sentiment, 3),
-                "engagement": round(engagement, 1),
-                "likes": round(likes, 1),
-                "stance_confidence": round(stance_confidence, 3),
-            }
-        )
-    rows.sort(key=lambda row: row["date"])
+def reaction_times(rng: random.Random):
+    rows = []
+    conditions = {"control": 0.0, "low dose": -25.0, "high dose": -60.0}
+    subject = 0
+    for condition, effect in conditions.items():
+        for _ in range(8):
+            subject += 1
+            age = rng.randint(19, 41)
+            sex = rng.choice(["F", "M"])
+            base = rng.gauss(520, 45)
+            for session in ("pre", "post"):
+                for trial in range(1, 11):
+                    shift = effect if session == "post" else 0.0
+                    rt = math.exp(rng.gauss(math.log(max(250, base + shift - 4 * trial)), 0.11))
+                    acc = min(1.0, max(0.0, rng.gauss(0.86 + (0.04 if session == "post" else 0) + (-shift / 1500), 0.06)))
+                    rows.append({
+                        "subject": f"S{subject:02d}", "condition": condition, "session": session, "trial": trial,
+                        "rt_ms": round(rt, 1), "accuracy": round(acc, 3), "age": age, "sex": sex,
+                    })
     return rows
 
 
-def main() -> None:
-    rows = generate()
-    with OUTPUT.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
-        writer.writeheader()
-        writer.writerows(rows)
-    print(f"wrote {len(rows)} rows -> {OUTPUT}")
+def growth_curves(rng: random.Random):
+    rows = []
+    strains = {"WT": (0.62, 1.45), "ΔmutA": (0.41, 1.20), "ΔmutB": (0.55, 0.85)}
+    for temp, tfac in ((30, 0.8), (37, 1.0)):
+        for strain, (rate, cap) in strains.items():
+            for rep in (1, 2, 3):
+                r = rate * tfac * rng.gauss(1, 0.04)
+                k = cap * rng.gauss(1, 0.03)
+                for t in range(0, 26, 1):
+                    hours = t * 2
+                    od = k / (1 + ((k - 0.02) / 0.02) * math.exp(-r * hours))
+                    od = max(0.005, od * rng.gauss(1, 0.03) + rng.gauss(0, 0.004))
+                    rows.append({"time_h": hours, "strain": strain, "temperature_C": temp, "replicate": rep, "od600": round(od, 4)})
+    return rows
+
+
+def write(name, rows):
+    OUT.mkdir(parents=True, exist_ok=True)
+    with open(OUT / name, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+    print(name, len(rows))
 
 
 if __name__ == "__main__":
-    main()
+    write("reaction_times.csv", reaction_times(random.Random(7)))
+    write("growth_curves.csv", growth_curves(random.Random(11)))

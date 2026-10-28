@@ -1,0 +1,481 @@
+subject,condition,session,trial,rt_ms,accuracy,age,sex
+S01,control,pre,1,515.7,0.872,29,F
+S01,control,pre,2,479.2,0.746,29,F
+S01,control,pre,3,440.7,0.866,29,F
+S01,control,pre,4,515.8,0.821,29,F
+S01,control,pre,5,508.8,0.84,29,F
+S01,control,pre,6,479.0,0.727,29,F
+S01,control,pre,7,432.1,0.806,29,F
+S01,control,pre,8,428.7,0.934,29,F
+S01,control,pre,9,499.7,0.9,29,F
+S01,control,pre,10,480.1,0.83,29,F
+S01,control,post,1,494.6,0.835,29,F
+S01,control,post,2,535.4,0.831,29,F
+S01,control,post,3,467.5,0.888,29,F
+S01,control,post,4,470.3,0.865,29,F
+S01,control,post,5,474.0,0.977,29,F
+S01,control,post,6,535.7,0.823,29,F
+S01,control,post,7,452.8,0.826,29,F
+S01,control,post,8,478.3,0.911,29,F
+S01,control,post,9,418.8,0.95,29,F
+S01,control,post,10,446.8,0.9,29,F
+S02,control,pre,1,482.9,0.827,26,F
+S02,control,pre,2,612.8,0.791,26,F
+S02,control,pre,3,498.7,1.0,26,F
+S02,control,pre,4,579.2,0.902,26,F
+S02,control,pre,5,529.8,0.826,26,F
+S02,control,pre,6,508.3,0.861,26,F
+S02,control,pre,7,474.6,0.771,26,F
+S02,control,pre,8,422.2,0.806,26,F
+S02,control,pre,9,479.5,0.945,26,F
+S02,control,pre,10,450.8,0.816,26,F
+S02,control,post,1,444.5,0.931,26,F
+S02,control,post,2,607.5,0.877,26,F
+S02,control,post,3,525.7,0.882,26,F
+S02,control,post,4,507.6,0.817,26,F
+S02,control,post,5,648.0,0.895,26,F
+S02,control,post,6,512.2,0.958,26,F
+S02,control,post,7,514.4,0.889,26,F
+S02,control,post,8,483.9,0.909,26,F
+S02,control,post,9,527.1,0.914,26,F
+S02,control,post,10,511.7,0.869,26,F
+S03,control,pre,1,512.9,0.917,26,M
+S03,control,pre,2,467.9,0.742,26,M
+S03,control,pre,3,408.0,0.911,26,M
+S03,control,pre,4,355.1,0.849,26,M
+S03,control,pre,5,480.4,0.781,26,M
+S03,control,pre,6,507.9,0.893,26,M
+S03,control,pre,7,414.5,0.879,26,M
+S03,control,pre,8,448.4,0.867,26,M
+S03,control,pre,9,469.0,0.82,26,M
+S03,control,pre,10,391.2,0.923,26,M
+S03,control,post,1,446.7,0.847,26,M
+S03,control,post,2,489.9,0.988,26,M
+S03,control,post,3,416.5,0.817,26,M
+S03,control,post,4,427.0,0.891,26,M
+S03,control,post,5,415.6,0.984,26,M
+S03,control,post,6,380.0,0.976,26,M
+S03,control,post,7,366.5,0.853,26,M
+S03,control,post,8,447.5,0.968,26,M
+S03,control,post,9,454.4,0.921,26,M
+S03,control,post,10,415.9,0.909,26,M
+S04,control,pre,1,607.2,0.907,29,F
+S04,control,pre,2,414.2,0.827,29,F
+S04,control,pre,3,517.2,0.845,29,F
+S04,control,pre,4,544.9,0.916,29,F
+S04,control,pre,5,438.3,0.748,29,F
+S04,control,pre,6,472.3,0.819,29,F
+S04,control,pre,7,569.7,0.906,29,F
+S04,control,pre,8,582.1,0.85,29,F
+S04,control,pre,9,498.2,0.891,29,F
+S04,control,pre,10,505.7,0.761,29,F
+S04,control,post,1,458.4,0.912,29,F
+S04,control,post,2,499.4,0.896,29,F
+S04,control,post,3,589.8,0.883,29,F
+S04,control,post,4,484.5,0.776,29,F
+S04,control,post,5,528.4,0.85,29,F
+S04,control,post,6,506.5,0.88,29,F
+S04,control,post,7,558.3,0.84,29,F
+S04,control,post,8,560.3,0.869,29,F
+S04,control,post,9,521.9,0.974,29,F
+S04,control,post,10,432.6,0.899,29,F
+S05,control,pre,1,450.1,0.857,38,F
+S05,control,pre,2,499.7,0.804,38,F
+S05,control,pre,3,530.6,0.874,38,F
+S05,control,pre,4,535.2,0.851,38,F
+S05,control,pre,5,574.9,0.807,38,F
+S05,control,pre,6,405.5,0.727,38,F
+S05,control,pre,7,566.4,1.0,38,F
+S05,control,pre,8,506.2,0.832,38,F
+S05,control,pre,9,543.5,0.866,38,F
+S05,control,pre,10,546.7,0.884,38,F
+S05,control,post,1,631.3,0.993,38,F
+S05,control,post,2,477.8,0.813,38,F
+S05,control,post,3,547.8,0.908,38,F
+S05,control,post,4,509.7,0.83,38,F
+S05,control,post,5,431.0,0.92,38,F
+S05,control,post,6,438.5,0.863,38,F
+S05,control,post,7,525.6,0.913,38,F
+S05,control,post,8,469.4,0.95,38,F
+S05,control,post,9,387.9,0.852,38,F
+S05,control,post,10,544.4,0.991,38,F
+S06,control,pre,1,569.0,0.874,24,F
+S06,control,pre,2,417.4,0.879,24,F
+S06,control,pre,3,432.5,0.808,24,F
+S06,control,pre,4,371.9,0.883,24,F
+S06,control,pre,5,514.6,0.923,24,F
+S06,control,pre,6,574.2,0.874,24,F
+S06,control,pre,7,464.7,0.832,24,F
+S06,control,pre,8,464.2,0.827,24,F
+S06,control,pre,9,494.7,0.857,24,F
+S06,control,pre,10,464.8,0.85,24,F
+S06,control,post,1,507.3,0.969,24,F
+S06,control,post,2,492.4,0.847,24,F
+S06,control,post,3,396.3,0.869,24,F
+S06,control,post,4,567.8,0.937,24,F
+S06,control,post,5,542.3,0.847,24,F
+S06,control,post,6,497.9,0.834,24,F
+S06,control,post,7,520.2,0.791,24,F
+S06,control,post,8,484.7,0.925,24,F
+S06,control,post,9,368.3,0.892,24,F
+S06,control,post,10,467.8,0.819,24,F
+S07,control,pre,1,625.4,0.876,23,F
+S07,control,pre,2,566.4,0.83,23,F
+S07,control,pre,3,483.9,0.757,23,F
+S07,control,pre,4,554.9,0.875,23,F
+S07,control,pre,5,526.0,0.866,23,F
+S07,control,pre,6,551.8,0.914,23,F
+S07,control,pre,7,569.6,0.985,23,F
+S07,control,pre,8,549.2,0.909,23,F
+S07,control,pre,9,543.6,0.941,23,F
+S07,control,pre,10,506.5,0.875,23,F
+S07,control,post,1,604.2,0.791,23,F
+S07,control,post,2,545.8,0.855,23,F
+S07,control,post,3,545.2,0.779,23,F
+S07,control,post,4,525.9,1.0,23,F
+S07,control,post,5,483.6,0.932,23,F
+S07,control,post,6,511.2,0.841,23,F
+S07,control,post,7,551.4,0.859,23,F
+S07,control,post,8,560.0,0.87,23,F
+S07,control,post,9,472.5,0.912,23,F
+S07,control,post,10,568.8,0.975,23,F
+S08,control,pre,1,657.1,0.957,41,M
+S08,control,pre,2,610.8,0.851,41,M
+S08,control,pre,3,625.0,0.842,41,M
+S08,control,pre,4,400.4,0.875,41,M
+S08,control,pre,5,572.4,0.829,41,M
+S08,control,pre,6,487.8,0.89,41,M
+S08,control,pre,7,525.5,0.894,41,M
+S08,control,pre,8,503.8,0.947,41,M
+S08,control,pre,9,618.3,0.869,41,M
+S08,control,pre,10,523.8,0.864,41,M
+S08,control,post,1,528.8,0.973,41,M
+S08,control,post,2,544.0,0.898,41,M
+S08,control,post,3,681.9,0.89,41,M
+S08,control,post,4,587.4,0.895,41,M
+S08,control,post,5,552.5,0.917,41,M
+S08,control,post,6,559.0,0.853,41,M
+S08,control,post,7,591.2,0.946,41,M
+S08,control,post,8,644.4,0.841,41,M
+S08,control,post,9,536.4,0.934,41,M
+S08,control,post,10,605.3,0.862,41,M
+S09,low dose,pre,1,539.9,0.836,41,M
+S09,low dose,pre,2,471.7,0.987,41,M
+S09,low dose,pre,3,584.1,0.788,41,M
+S09,low dose,pre,4,446.0,0.962,41,M
+S09,low dose,pre,5,572.1,0.969,41,M
+S09,low dose,pre,6,556.6,0.808,41,M
+S09,low dose,pre,7,519.8,0.73,41,M
+S09,low dose,pre,8,461.5,0.856,41,M
+S09,low dose,pre,9,526.5,0.816,41,M
+S09,low dose,pre,10,486.4,0.888,41,M
+S09,low dose,post,1,525.4,0.955,41,M
+S09,low dose,post,2,511.7,0.897,41,M
+S09,low dose,post,3,541.1,0.92,41,M
+S09,low dose,post,4,449.4,0.879,41,M
+S09,low dose,post,5,488.1,0.91,41,M
+S09,low dose,post,6,492.5,0.917,41,M
+S09,low dose,post,7,489.5,0.909,41,M
+S09,low dose,post,8,414.6,0.942,41,M
+S09,low dose,post,9,530.1,0.943,41,M
+S09,low dose,post,10,458.5,0.943,41,M
+S10,low dose,pre,1,518.5,0.85,34,M
+S10,low dose,pre,2,476.7,0.902,34,M
+S10,low dose,pre,3,499.3,0.978,34,M
+S10,low dose,pre,4,456.9,0.827,34,M
+S10,low dose,pre,5,623.0,0.849,34,M
+S10,low dose,pre,6,456.9,0.851,34,M
+S10,low dose,pre,7,382.3,0.772,34,M
+S10,low dose,pre,8,429.8,0.869,34,M
+S10,low dose,pre,9,417.1,0.809,34,M
+S10,low dose,pre,10,325.9,0.854,34,M
+S10,low dose,post,1,390.1,0.863,34,M
+S10,low dose,post,2,474.6,0.927,34,M
+S10,low dose,post,3,439.1,0.922,34,M
+S10,low dose,post,4,408.3,0.957,34,M
+S10,low dose,post,5,475.4,0.912,34,M
+S10,low dose,post,6,534.0,0.943,34,M
+S10,low dose,post,7,429.5,0.954,34,M
+S10,low dose,post,8,409.8,0.938,34,M
+S10,low dose,post,9,403.6,1.0,34,M
+S10,low dose,post,10,412.4,1.0,34,M
+S11,low dose,pre,1,497.6,0.809,21,M
+S11,low dose,pre,2,493.3,0.834,21,M
+S11,low dose,pre,3,600.7,0.99,21,M
+S11,low dose,pre,4,591.6,0.881,21,M
+S11,low dose,pre,5,484.9,0.942,21,M
+S11,low dose,pre,6,449.0,0.776,21,M
+S11,low dose,pre,7,451.5,0.847,21,M
+S11,low dose,pre,8,439.2,0.842,21,M
+S11,low dose,pre,9,573.8,0.929,21,M
+S11,low dose,pre,10,576.5,0.844,21,M
+S11,low dose,post,1,440.7,0.832,21,M
+S11,low dose,post,2,535.2,0.785,21,M
+S11,low dose,post,3,489.1,0.918,21,M
+S11,low dose,post,4,424.2,0.921,21,M
+S11,low dose,post,5,476.5,0.875,21,M
+S11,low dose,post,6,401.5,0.88,21,M
+S11,low dose,post,7,365.5,0.901,21,M
+S11,low dose,post,8,456.4,0.999,21,M
+S11,low dose,post,9,488.8,0.973,21,M
+S11,low dose,post,10,452.9,0.898,21,M
+S12,low dose,pre,1,515.7,0.86,19,F
+S12,low dose,pre,2,545.0,0.765,19,F
+S12,low dose,pre,3,447.2,0.859,19,F
+S12,low dose,pre,4,497.3,0.841,19,F
+S12,low dose,pre,5,500.9,0.814,19,F
+S12,low dose,pre,6,540.5,0.881,19,F
+S12,low dose,pre,7,491.6,0.82,19,F
+S12,low dose,pre,8,483.0,0.697,19,F
+S12,low dose,pre,9,438.4,0.862,19,F
+S12,low dose,pre,10,410.5,0.872,19,F
+S12,low dose,post,1,503.5,0.834,19,F
+S12,low dose,post,2,478.0,0.898,19,F
+S12,low dose,post,3,512.7,0.953,19,F
+S12,low dose,post,4,481.4,0.866,19,F
+S12,low dose,post,5,471.8,0.913,19,F
+S12,low dose,post,6,515.4,0.934,19,F
+S12,low dose,post,7,435.4,0.835,19,F
+S12,low dose,post,8,448.6,0.872,19,F
+S12,low dose,post,9,410.0,0.91,19,F
+S12,low dose,post,10,435.2,0.923,19,F
+S13,low dose,pre,1,531.2,0.811,36,F
+S13,low dose,pre,2,512.6,0.923,36,F
+S13,low dose,pre,3,532.0,1.0,36,F
+S13,low dose,pre,4,490.9,0.759,36,F
+S13,low dose,pre,5,578.3,0.881,36,F
+S13,low dose,pre,6,479.9,0.944,36,F
+S13,low dose,pre,7,534.8,0.856,36,F
+S13,low dose,pre,8,533.3,0.792,36,F
+S13,low dose,pre,9,434.0,0.855,36,F
+S13,low dose,pre,10,498.5,0.813,36,F
+S13,low dose,post,1,532.9,0.959,36,F
+S13,low dose,post,2,444.1,0.996,36,F
+S13,low dose,post,3,596.7,0.891,36,F
+S13,low dose,post,4,426.1,0.908,36,F
+S13,low dose,post,5,417.8,0.895,36,F
+S13,low dose,post,6,482.3,0.891,36,F
+S13,low dose,post,7,500.6,0.885,36,F
+S13,low dose,post,8,500.8,0.953,36,F
+S13,low dose,post,9,439.9,1.0,36,F
+S13,low dose,post,10,453.8,0.916,36,F
+S14,low dose,pre,1,494.3,0.909,31,F
+S14,low dose,pre,2,525.6,0.879,31,F
+S14,low dose,pre,3,620.1,0.928,31,F
+S14,low dose,pre,4,491.6,0.997,31,F
+S14,low dose,pre,5,516.7,0.907,31,F
+S14,low dose,pre,6,477.3,0.857,31,F
+S14,low dose,pre,7,419.5,0.967,31,F
+S14,low dose,pre,8,586.3,0.787,31,F
+S14,low dose,pre,9,424.1,0.763,31,F
+S14,low dose,pre,10,565.0,0.832,31,F
+S14,low dose,post,1,504.1,0.898,31,F
+S14,low dose,post,2,496.8,0.851,31,F
+S14,low dose,post,3,500.8,0.83,31,F
+S14,low dose,post,4,491.6,0.935,31,F
+S14,low dose,post,5,517.4,0.903,31,F
+S14,low dose,post,6,441.4,0.926,31,F
+S14,low dose,post,7,458.4,1.0,31,F
+S14,low dose,post,8,521.7,0.91,31,F
+S14,low dose,post,9,451.5,0.875,31,F
+S14,low dose,post,10,425.3,0.895,31,F
+S15,low dose,pre,1,597.4,0.889,24,F
+S15,low dose,pre,2,491.7,0.808,24,F
+S15,low dose,pre,3,571.5,0.864,24,F
+S15,low dose,pre,4,490.9,0.817,24,F
+S15,low dose,pre,5,534.1,0.895,24,F
+S15,low dose,pre,6,615.4,0.836,24,F
+S15,low dose,pre,7,593.3,0.875,24,F
+S15,low dose,pre,8,499.6,0.98,24,F
+S15,low dose,pre,9,546.3,0.786,24,F
+S15,low dose,pre,10,595.8,0.872,24,F
+S15,low dose,post,1,585.7,0.918,24,F
+S15,low dose,post,2,469.5,0.866,24,F
+S15,low dose,post,3,506.0,0.888,24,F
+S15,low dose,post,4,464.6,0.946,24,F
+S15,low dose,post,5,424.6,1.0,24,F
+S15,low dose,post,6,589.5,0.852,24,F
+S15,low dose,post,7,571.2,0.869,24,F
+S15,low dose,post,8,530.8,0.979,24,F
+S15,low dose,post,9,388.2,0.961,24,F
+S15,low dose,post,10,545.7,0.926,24,F
+S16,low dose,pre,1,485.4,0.86,37,M
+S16,low dose,pre,2,518.2,0.81,37,M
+S16,low dose,pre,3,511.9,0.733,37,M
+S16,low dose,pre,4,423.2,0.889,37,M
+S16,low dose,pre,5,451.9,0.92,37,M
+S16,low dose,pre,6,372.4,0.73,37,M
+S16,low dose,pre,7,399.7,0.775,37,M
+S16,low dose,pre,8,411.7,0.794,37,M
+S16,low dose,pre,9,391.3,0.855,37,M
+S16,low dose,pre,10,405.5,0.817,37,M
+S16,low dose,post,1,471.1,0.875,37,M
+S16,low dose,post,2,398.4,0.946,37,M
+S16,low dose,post,3,401.3,1.0,37,M
+S16,low dose,post,4,391.3,0.889,37,M
+S16,low dose,post,5,444.8,0.948,37,M
+S16,low dose,post,6,354.8,0.887,37,M
+S16,low dose,post,7,395.7,0.997,37,M
+S16,low dose,post,8,419.3,0.92,37,M
+S16,low dose,post,9,288.7,0.954,37,M
+S16,low dose,post,10,325.0,0.819,37,M
+S17,high dose,pre,1,501.6,0.786,34,F
+S17,high dose,pre,2,545.4,0.897,34,F
+S17,high dose,pre,3,509.9,0.925,34,F
+S17,high dose,pre,4,444.3,0.898,34,F
+S17,high dose,pre,5,508.8,0.809,34,F
+S17,high dose,pre,6,509.6,0.768,34,F
+S17,high dose,pre,7,485.1,0.849,34,F
+S17,high dose,pre,8,431.1,0.854,34,F
+S17,high dose,pre,9,477.2,0.83,34,F
+S17,high dose,pre,10,576.4,0.924,34,F
+S17,high dose,post,1,469.7,0.971,34,F
+S17,high dose,post,2,527.7,0.963,34,F
+S17,high dose,post,3,491.1,0.928,34,F
+S17,high dose,post,4,545.5,1.0,34,F
+S17,high dose,post,5,473.4,0.842,34,F
+S17,high dose,post,6,366.4,0.809,34,F
+S17,high dose,post,7,431.2,1.0,34,F
+S17,high dose,post,8,439.5,0.958,34,F
+S17,high dose,post,9,406.4,1.0,34,F
+S17,high dose,post,10,418.6,0.859,34,F
+S18,high dose,pre,1,468.0,0.889,24,M
+S18,high dose,pre,2,536.4,0.887,24,M
+S18,high dose,pre,3,576.4,0.877,24,M
+S18,high dose,pre,4,572.3,0.941,24,M
+S18,high dose,pre,5,474.3,0.85,24,M
+S18,high dose,pre,6,497.4,0.949,24,M
+S18,high dose,pre,7,625.3,0.713,24,M
+S18,high dose,pre,8,498.6,0.87,24,M
+S18,high dose,pre,9,541.0,0.872,24,M
+S18,high dose,pre,10,422.1,0.92,24,M
+S18,high dose,post,1,414.2,0.902,24,M
+S18,high dose,post,2,425.3,1.0,24,M
+S18,high dose,post,3,450.5,1.0,24,M
+S18,high dose,post,4,555.6,0.989,24,M
+S18,high dose,post,5,498.3,1.0,24,M
+S18,high dose,post,6,430.5,0.958,24,M
+S18,high dose,post,7,463.3,0.872,24,M
+S18,high dose,post,8,438.5,0.907,24,M
+S18,high dose,post,9,424.9,0.897,24,M
+S18,high dose,post,10,417.8,0.987,24,M
+S19,high dose,pre,1,541.3,0.815,20,M
+S19,high dose,pre,2,485.2,0.784,20,M
+S19,high dose,pre,3,649.4,0.956,20,M
+S19,high dose,pre,4,535.2,0.809,20,M
+S19,high dose,pre,5,400.8,0.832,20,M
+S19,high dose,pre,6,593.3,0.77,20,M
+S19,high dose,pre,7,444.6,0.881,20,M
+S19,high dose,pre,8,487.0,0.873,20,M
+S19,high dose,pre,9,467.2,0.846,20,M
+S19,high dose,pre,10,430.5,0.877,20,M
+S19,high dose,post,1,381.0,1.0,20,M
+S19,high dose,post,2,412.1,0.987,20,M
+S19,high dose,post,3,498.9,1.0,20,M
+S19,high dose,post,4,455.8,0.91,20,M
+S19,high dose,post,5,522.5,0.966,20,M
+S19,high dose,post,6,471.5,0.983,20,M
+S19,high dose,post,7,398.4,0.957,20,M
+S19,high dose,post,8,375.1,0.88,20,M
+S19,high dose,post,9,426.0,0.973,20,M
+S19,high dose,post,10,467.9,0.899,20,M
+S20,high dose,pre,1,504.6,0.914,36,M
+S20,high dose,pre,2,486.4,0.874,36,M
+S20,high dose,pre,3,442.1,0.831,36,M
+S20,high dose,pre,4,346.3,0.945,36,M
+S20,high dose,pre,5,490.0,0.854,36,M
+S20,high dose,pre,6,493.2,0.909,36,M
+S20,high dose,pre,7,479.4,0.832,36,M
+S20,high dose,pre,8,371.3,0.835,36,M
+S20,high dose,pre,9,447.5,0.756,36,M
+S20,high dose,pre,10,427.8,0.907,36,M
+S20,high dose,post,1,410.5,0.986,36,M
+S20,high dose,post,2,407.2,1.0,36,M
+S20,high dose,post,3,419.4,0.98,36,M
+S20,high dose,post,4,383.9,1.0,36,M
+S20,high dose,post,5,404.5,0.96,36,M
+S20,high dose,post,6,394.0,0.985,36,M
+S20,high dose,post,7,333.6,0.926,36,M
+S20,high dose,post,8,426.6,0.98,36,M
+S20,high dose,post,9,386.3,0.941,36,M
+S20,high dose,post,10,401.4,0.911,36,M
+S21,high dose,pre,1,565.2,0.888,33,M
+S21,high dose,pre,2,575.6,0.938,33,M
+S21,high dose,pre,3,531.1,0.912,33,M
+S21,high dose,pre,4,516.5,0.904,33,M
+S21,high dose,pre,5,490.4,0.853,33,M
+S21,high dose,pre,6,644.0,0.887,33,M
+S21,high dose,pre,7,519.2,0.791,33,M
+S21,high dose,pre,8,480.7,0.872,33,M
+S21,high dose,pre,9,577.0,0.886,33,M
+S21,high dose,pre,10,547.0,0.857,33,M
+S21,high dose,post,1,571.3,0.917,33,M
+S21,high dose,post,2,459.7,0.993,33,M
+S21,high dose,post,3,487.7,0.923,33,M
+S21,high dose,post,4,450.8,0.925,33,M
+S21,high dose,post,5,510.1,0.961,33,M
+S21,high dose,post,6,413.5,0.966,33,M
+S21,high dose,post,7,477.6,0.88,33,M
+S21,high dose,post,8,505.5,0.923,33,M
+S21,high dose,post,9,443.6,0.988,33,M
+S21,high dose,post,10,527.7,0.899,33,M
+S22,high dose,pre,1,586.8,0.845,28,M
+S22,high dose,pre,2,483.8,0.837,28,M
+S22,high dose,pre,3,436.3,0.92,28,M
+S22,high dose,pre,4,581.5,0.859,28,M
+S22,high dose,pre,5,550.7,0.952,28,M
+S22,high dose,pre,6,517.5,0.866,28,M
+S22,high dose,pre,7,562.2,0.823,28,M
+S22,high dose,pre,8,532.7,0.805,28,M
+S22,high dose,pre,9,551.5,0.815,28,M
+S22,high dose,pre,10,504.7,0.869,28,M
+S22,high dose,post,1,409.8,0.913,28,M
+S22,high dose,post,2,491.0,0.926,28,M
+S22,high dose,post,3,433.4,0.9,28,M
+S22,high dose,post,4,436.0,0.939,28,M
+S22,high dose,post,5,447.2,1.0,28,M
+S22,high dose,post,6,477.7,0.927,28,M
+S22,high dose,post,7,370.4,0.946,28,M
+S22,high dose,post,8,480.8,0.932,28,M
+S22,high dose,post,9,533.5,1.0,28,M
+S22,high dose,post,10,498.2,0.929,28,M
+S23,high dose,pre,1,630.9,0.812,20,M
+S23,high dose,pre,2,462.3,0.785,20,M
+S23,high dose,pre,3,481.2,0.8,20,M
+S23,high dose,pre,4,508.7,0.883,20,M
+S23,high dose,pre,5,630.7,0.844,20,M
+S23,high dose,pre,6,549.7,0.892,20,M
+S23,high dose,pre,7,539.6,0.838,20,M
+S23,high dose,pre,8,576.1,0.968,20,M
+S23,high dose,pre,9,525.0,0.904,20,M
+S23,high dose,pre,10,669.6,0.909,20,M
+S23,high dose,post,1,450.5,0.914,20,M
+S23,high dose,post,2,471.2,0.889,20,M
+S23,high dose,post,3,549.8,1.0,20,M
+S23,high dose,post,4,432.3,0.909,20,M
+S23,high dose,post,5,464.2,0.94,20,M
+S23,high dose,post,6,554.2,0.892,20,M
+S23,high dose,post,7,542.7,0.942,20,M
+S23,high dose,post,8,492.9,1.0,20,M
+S23,high dose,post,9,479.7,0.861,20,M
+S23,high dose,post,10,505.5,0.988,20,M
+S24,high dose,pre,1,458.5,0.88,34,M
+S24,high dose,pre,2,415.7,0.871,34,M
+S24,high dose,pre,3,380.6,0.886,34,M
+S24,high dose,pre,4,495.9,0.882,34,M
+S24,high dose,pre,5,493.3,0.908,34,M
+S24,high dose,pre,6,427.9,0.789,34,M
+S24,high dose,pre,7,468.4,0.884,34,M
+S24,high dose,pre,8,337.8,0.962,34,M
+S24,high dose,pre,9,468.4,0.949,34,M
+S24,high dose,pre,10,480.9,0.858,34,M
+S24,high dose,post,1,389.3,0.904,34,M
+S24,high dose,post,2,425.0,0.932,34,M
+S24,high dose,post,3,468.7,0.904,34,M
+S24,high dose,post,4,404.2,1.0,34,M
+S24,high dose,post,5,375.8,0.931,34,M
+S24,high dose,post,6,321.1,1.0,34,M
+S24,high dose,post,7,402.3,1.0,34,M
+S24,high dose,post,8,339.4,1.0,34,M
+S24,high dose,post,9,375.3,0.996,34,M
+S24,high dose,post,10,365.6,0.92,34,M

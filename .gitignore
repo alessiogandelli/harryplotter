@@ -1,35 +1,8 @@
-# scratch / tmp
-tmp/
-.scratch/
-
-# python
+node_modules/
 __pycache__/
-*.py[cod]
+*.pyc
 .venv/
-venv/
+dist/
 *.egg-info/
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
-
-# node
-node_modules/
-dist/
-.vite/
-coverage/
-
-# data & artifacts
-data/
-artifacts/
-*.sqlite
-*.db
-
-# env
-.env
-.env.*
-!.env.example
-
-# os
-.DS_Store
+# the built editor IS committed (python/harryplotter/static) so `pip install git+…` works without Node
