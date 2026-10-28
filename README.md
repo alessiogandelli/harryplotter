@@ -41,9 +41,16 @@ Python or R code.
 - **Edit on the figure.** Double-click the title, an axis label or the legend title to rewrite it in place.
 - **Paste from Excel.** Copy cells, press ⌘V, done.
 
-| | | |
-|---|---|---|
-| ![](docs/example-bar.png) | ![](docs/example-violin.png) | ![](docs/example-scatter.png) |
+| | |
+|---|---|
+| ![](docs/example-volcano.png) | ![](docs/example-stripes.png) |
+| ![](docs/example-simpson.png) | ![](docs/example-dose.png) |
+| ![](docs/example-bar.png) | ![](docs/example-violin.png) |
+
+Eight example datasets ship with the editor (all synthetic, from `samples/generate.py`), each
+opening on a showcase figure: RNA-seq volcano, warming stripes, a seabird Simpson's paradox,
+dose–response curves, a clinical trial, a reaction-time experiment, bacterial growth and online
+polarisation.
 
 ## Use it
 

@@ -17,8 +17,9 @@ const set = (fn: (s: Spec) => void) => (s: Spec) => { const c = structuredClone(
 
 const SLOT_LABEL: Record<EncodingSlot, string> = { x: 'X axis', y: 'Y axis', color: 'Color by', size: 'Size by', facet: 'Panels by', facetRow: 'Rows of panels by' };
 
-export function commands(dataset: Dataset | null, spec: Spec): Command[] {
+export function commands(dataset: Dataset | null, spec: Spec, samples: { file: string; title: string; field: string }[] = []): Command[] {
   const out: Command[] = [];
+  for (const s of samples) out.push({ id: `app:sample:${s.file}`, group: 'Examples', label: `Example: ${s.title}`, keywords: `demo sample ${s.field}`, run: () => `app:sample:${s.file}` as `app:${string}` });
   for (const m of MARKS) out.push({ id: `mark:${m.id}`, group: 'Chart', label: `${m.label} chart`, keywords: m.hint, run: set((s) => { s.mark = m.id; }) });
 
   if (dataset) {

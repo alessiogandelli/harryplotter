@@ -160,14 +160,30 @@ export function levels(rows: Row[], col: string): string[] {
   }
   const out = [...seen];
   if (out.every((s) => s !== '' && Number.isFinite(Number(s)))) out.sort((a, b) => Number(a) - Number(b));
-  else if (out.length > 1 && out.every(isOrdinalWord)) out.sort((a, b) => ordinalRank(a) - ordinalRank(b));
+  else if (out.length > 1) {
+    const vocab = VOCABS.find((v) => out.every((s) => v.includes(s.toLowerCase())));
+    if (vocab) out.sort((a, b) => vocab.indexOf(a.toLowerCase()) - vocab.indexOf(b.toLowerCase()));
+    else {
+      // "low dose" / "high dose": order by the ordinal word inside the label
+      const rank = (s: string) => Math.min(...s.toLowerCase().split(/[\s_-]+/).map((w) => { const i = VOCABS[0].indexOf(w); return i < 0 ? Infinity : i; }));
+      if (out.every((s) => Number.isFinite(rank(s)))) out.sort((a, b) => rank(a) - rank(b));
+    }
+  }
   return out;
 }
 
 // low/medium/high etc. keep their natural order instead of alphabetical noise
-const ORDINAL = ['none', 'very low', 'low', 'medium', 'mid', 'moderate', 'high', 'very high', 'control', 'placebo', 'baseline', 'pre', 'post', 'before', 'after'];
-const isOrdinalWord = (s: string) => ORDINAL.includes(s.toLowerCase());
-const ordinalRank = (s: string) => ORDINAL.indexOf(s.toLowerCase());
+// words with a natural order: kept in that order instead of alphabetical noise
+const VOCABS: string[][] = [
+  // reference groups first, then increasing intensity, then time
+  ['control', 'placebo', 'vehicle', 'untreated', 'baseline', 'none', 'very low', 'low', 'medium', 'mid', 'moderate', 'high', 'very high', 'pre', 'post', 'before', 'after'],
+  ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'],
+  ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'],
+  ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+  ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+  ['down', 'downregulated', 'up', 'upregulated', 'n.s.', 'ns', 'not significant'],
+  ['strongly disagree', 'disagree', 'neutral', 'agree', 'strongly agree'],
+];
 
 export const keyOf = (v: unknown) => (v instanceof Date ? v.toISOString().slice(0, 10) : v === null || v === undefined ? '' : String(v));
 

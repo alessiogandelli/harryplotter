@@ -2,7 +2,7 @@ import * as Plot from '@observablehq/plot';
 import * as d3 from 'd3';
 import { applyFilters, columnOf, keyOf, levels } from './data';
 import {
-  CATEGORICAL_MARKS, FONT_STACKS, MM_TO_PX, PT_TO_PX, categoricalColors, lowerFirst, markInfo, prettify, sequentialScheme,
+  CATEGORICAL_MARKS, FONT_STACKS, MM_TO_PX, PT_TO_PX, categoricalColors, continuousColor, lowerFirst, markInfo, paletteById, prettify,
 } from './spec';
 import {
   anova, boxStats, formatP, kde, linearRegression, linspace, loess, mean, median, pearson, stars, summarize, welch,
@@ -42,6 +42,7 @@ interface Ctx {
   colorLevels: string[];
   colorRange: string[];
   colorNumeric: boolean;
+  heatExtent?: [number, number];
 }
 
 // ---------------------------------------------------------------- text metrics
@@ -100,6 +101,7 @@ export function render(spec: Spec, dataset: Dataset | null, opts: { interactive?
     colorLevels: [], colorRange: [], colorNumeric: false,
   };
   setupColor(ctx, dataset);
+  if (spec.mark === 'heatmap') ctx.heatExtent = heatExtent(heatCells(ctx, dataset), spec.style.palette);
 
   const W = st.widthMm * MM_TO_PX;
   const H = st.heightMm * MM_TO_PX;
@@ -232,15 +234,15 @@ function buildLegend(ctx: Ctx, W: number, H: number): Legend | null {
   if (continuous) {
     const domain = spec.mark === 'corr' ? [-1, 1] : undefined;
     const label = spec.mark === 'corr' ? 'Pearson r' : spec.mark === 'heatmap' ? heatmapValueLabel(spec) : title;
-    const scheme = spec.mark === 'corr' ? 'rdbu' : sequentialScheme(spec.style.palette);
+    const scale = spec.mark === 'corr' ? { type: 'linear', scheme: 'rdbu', domain: [-1, 1] } : continuousColor(spec.style.palette, (domain as [number, number] | undefined) ?? (spec.mark === 'heatmap' ? ctx.heatExtent : colorDomain(ctx)));
     const width = Math.min(220, W * 0.35);
     const ramp = Plot.legend({
-      color: { type: 'linear', scheme: scheme as any, domain: domain ?? colorDomain(ctx), label },
-      width, height: fontPx * 3.4, marginLeft: 2, marginRight: 8, ticks: 4, tickSize: 4,
+      color: { ...scale, label } as any,
+      width, height: fontPx * 1.4 + fontPx * 2.2 + Math.max(8, fontPx * 0.9), marginTop: fontPx * 1.4, marginBottom: fontPx * 2.2, marginLeft: 2, marginRight: 8, ticks: 4, tickSize: 4,
       style: { fontFamily: font, fontSize: `${fontPx * 0.9}px`, color: theme.ink, background: 'transparent' } as any,
     }) as SVGSVGElement;
     g.appendChild(ramp);
-    return { node: g, position: 'top', width, height: fontPx * 3.6, x: W - width - pad };
+    return { node: g, position: 'top', width, height: fontPx * 3.8 + Math.max(8, fontPx * 0.9), x: W - width - pad };
   }
 
   if (ctx.colorLevels.length < 2) return null;
@@ -420,6 +422,9 @@ function buildPlot(ctx: Ctx, dataset: Dataset, width: number, height: number): S
       st.yMax ?? auto[1] ?? (yCol ? (d3.max(ctx.rows, (r) => r[yCol] as number) as number) : 1)];
   }
 
+  // log axes: plain numbers (0.01, 1, 100) rather than SI prefixes that read like units (10m)
+  for (const a of [x, y]) if (a.type === 'log' && !a.tickFormat) a.tickFormat = '~g';
+
   try {
     const svg = Plot.plot({
       width, height,
@@ -523,7 +528,7 @@ function aggLabel(agg: Aggregate, col: string | undefined, err: keyof typeof ERR
 }
 
 function colorChannel(ctx: Ctx): Partial<Plot.ScaleOptions> | undefined {
-  if (ctx.colorNumeric) return { type: 'linear', scheme: sequentialScheme(ctx.spec.style.palette) as any };
+  if (ctx.colorNumeric) return continuousColor(ctx.spec.style.palette, colorDomain(ctx)) as Plot.ScaleOptions;
   if (ctx.colorLevels.length) return { domain: ctx.colorLevels, range: ctx.colorRange };
   return undefined;
 }
@@ -912,7 +917,7 @@ function categorical(ctx: Ctx, dataset: Dataset): Layout {
     marks,
     x: {
       domain: [-0.6, cats.length - 0.4],
-      ticks: d3.range(cats.length),
+      ticks: thin(cats, 40).map((c) => cats.indexOf(c)),
       tickFormat: (i: number) => (Number.isInteger(i) ? cats[i] ?? '' : ''),
       axis: x ? 'bottom' : null,
     },
@@ -920,7 +925,7 @@ function categorical(ctx: Ctx, dataset: Dataset): Layout {
     color: undefined,
     xLabel: x ? prettify(x) : '',
     yLabel,
-    xTickLabels: cats,
+    xTickLabels: thin(cats, 40),
     gridX: false,
   };
 }
@@ -1028,32 +1033,51 @@ function heatmap(ctx: Ctx, dataset: Dataset): Layout {
   const valueCol = color && columnOf(dataset, color)?.type === 'number' ? color : undefined;
   const agg: Aggregate = valueCol ? (spec.stats.aggregate === 'none' ? 'mean' : spec.stats.aggregate) : 'count';
   const xs = levels(ctx.rows, x!), ys = levels(ctx.rows, y!);
-  if (xs.length > 80 || ys.length > 80) ctx.warnings.push('Heatmaps work best with fewer than 80 categories per axis.');
+  if (xs.length > 250 || ys.length > 250) ctx.warnings.push('Heatmaps work best with fewer than 250 categories per axis.');
   const fx = spec.enc.facet;
-  const cells = d3.flatRollup(
+  const cells = heatCells(ctx, dataset);
+  const ext = heatExtent(cells, spec.style.palette);
+  const colorScale = continuousColor(spec.style.palette, ext);
+  const diverging = paletteById(spec.style.palette).kind === 'diverging';
+  const marks: Mark[] = [
+    Plot.cell(cells, { x: '__x', y: '__y', fill: '__v', inset: xs.length > 60 ? 0 : 0.5, ...(fx ? { fx } : {}), ...(ctx.interactive ? { title: (c: Row) => `${prettify(x)}: ${c.__x}\n${prettify(y)}: ${c.__y}\n${heatmapValueLabel(spec)}: ${fmtNum(c.__v as number)}`, tip: { fontSize: fontPx * 0.95 } } : {}) } as any),
+  ];
+  if (spec.stats.labels && cells.length <= 600 && xs.length <= 30) {
+    marks.push(Plot.text(cells, { x: '__x', y: '__y', text: (c: Row) => fmtNum(c.__v as number), fill: (c: Row) => labelInk(colorScale.scheme as string, (colorScale.domain as [number, number]) ?? ext, c.__v as number, diverging), fontSize: fontPx * 0.85, ...(fx ? { fx } : {}) } as any));
+  }
+  return {
+    marks,
+    x: { type: 'band', domain: xs, tickSize: 0, ticks: thin(xs) } as any,
+    y: { type: 'band', domain: ys, tickSize: 0, ticks: thin(ys, 30) } as any,
+    color: colorScale as Plot.ScaleOptions,
+    xLabel: prettify(x),
+    yLabel: prettify(y),
+    xTickLabels: thin(xs),
+    yTickLabels: thin(ys, 30),
+    gridX: false,
+  };
+}
+
+/** Colour range for cells; diverging palettes centre on 0 and ignore the most extreme 5% so the bulk keeps contrast. */
+function heatExtent(cells: Row[], palette: string): [number, number] {
+  const vals = cells.map((c) => c.__v as number).filter(Number.isFinite);
+  if (paletteById(palette).kind === 'diverging') {
+    const m = d3.quantile(vals.map(Math.abs).sort((a, b) => a - b), 0.95) || d3.max(vals, Math.abs) || 1;
+    return [-m, m];
+  }
+  return d3.extent(vals) as [number, number];
+}
+
+/** Aggregated heatmap cells (also needed before layout, for the colour legend). */
+function heatCells(ctx: Ctx, dataset: Dataset): Row[] {
+  const { x, y, color, facet: fx } = ctx.spec.enc;
+  const valueCol = color && columnOf(dataset, color)?.type === 'number' ? color : undefined;
+  const agg: Aggregate = valueCol ? (ctx.spec.stats.aggregate === 'none' ? 'mean' : ctx.spec.stats.aggregate) : 'count';
+  return d3.flatRollup(
     ctx.rows,
     (rs) => (valueCol ? aggregate(rs.map((r) => r[valueCol] as number), agg) : rs.length),
     (r) => keyOf(r[x!]), (r) => keyOf(r[y!]), (r) => (fx ? keyOf(r[fx]) : ''),
   ).map(([cx, cy, cf, v]) => ({ __x: cx, __y: cy, __v: v, ...(fx ? { [fx]: cf } : {}) }));
-  const ext = d3.extent(cells, (c) => c.__v) as [number, number];
-  const scheme = sequentialScheme(spec.style.palette);
-  const marks: Mark[] = [
-    Plot.cell(cells, { x: '__x', y: '__y', fill: '__v', inset: 0.5, ...(fx ? { fx } : {}), ...(ctx.interactive ? { title: (c: Row) => `${prettify(x)}: ${c.__x}\n${prettify(y)}: ${c.__y}\n${heatmapValueLabel(spec)}: ${fmtNum(c.__v as number)}`, tip: { fontSize: fontPx * 0.95 } } : {}) } as any),
-  ];
-  if (spec.stats.labels && cells.length <= 600 && xs.length <= 30) {
-    marks.push(Plot.text(cells, { x: '__x', y: '__y', text: (c: Row) => fmtNum(c.__v as number), fill: (c: Row) => labelInk(scheme, ext, c.__v as number), fontSize: fontPx * 0.85, ...(fx ? { fx } : {}) } as any));
-  }
-  return {
-    marks,
-    x: { type: 'band', domain: xs, tickSize: 0 } as any,
-    y: { type: 'band', domain: ys, tickSize: 0 } as any,
-    color: { type: 'linear', scheme: scheme as any, domain: ext },
-    xLabel: prettify(x),
-    yLabel: prettify(y),
-    xTickLabels: xs,
-    yTickLabels: ys,
-    gridX: false,
-  };
 }
 
 function heatmapValueLabel(spec: Spec) {
@@ -1063,10 +1087,25 @@ function heatmapValueLabel(spec: Spec) {
   return agg === 'count' ? 'Count' : `${AGG_LABEL[agg]} ${lowerFirst(prettify(c))}`;
 }
 
-function labelInk(scheme: string, ext: [number, number], v: number) {
+/** Every k-th label once there are too many to read; round numbers when the labels are years or doses. */
+export function thin(labels: string[], max = 16): string[] {
+  if (labels.length <= max) return labels;
+  const nums = labels.map(Number);
+  if (nums.every(Number.isFinite)) {
+    const span = Math.max(...nums) - Math.min(...nums);
+    const step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000].find((s) => span / s <= max) ?? Math.ceil(span / max);
+    const picked = labels.filter((_, i) => Math.abs(nums[i] / step - Math.round(nums[i] / step)) < 1e-9);
+    if (picked.length >= 2) return picked;
+  }
+  const k = Math.ceil(labels.length / max);
+  return labels.filter((_, i) => i % k === 0);
+}
+
+function labelInk(scheme: string, ext: [number, number], v: number, reversed = false) {
   const name = `interpolate${scheme.charAt(0).toUpperCase()}${scheme.slice(1)}`;
   const interp = (d3 as any)[name] ?? d3.interpolateViridis;
-  const t = ext[1] === ext[0] ? 0.5 : (v - ext[0]) / (ext[1] - ext[0]);
+  let t = ext[1] === ext[0] ? 0.5 : (v - ext[0]) / (ext[1] - ext[0]);
+  if (reversed) t = 1 - t;
   const c = d3.rgb(interp(t));
   const lum = (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
   return lum > 0.55 ? '#111111' : '#ffffff';

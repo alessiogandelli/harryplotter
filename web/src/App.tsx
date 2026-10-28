@@ -8,7 +8,9 @@ import { PromptBar } from './components/PromptBar';
 import { IdeasDialog } from './components/Ideas';
 import { ImprovePanel, runImprove } from './components/Improve';
 import { StyleTab } from './components/StyleTab';
-import { Welcome } from './components/Welcome';
+import { SAMPLES, Welcome } from './components/Welcome';
+import { mergePatch } from './lib/ai';
+import { emptySpec } from './lib/spec';
 import { buildDataset, parseDelimited, parseFile } from './lib/data';
 import { copyPNG } from './lib/export';
 import { autoSpec } from './lib/suggest';
@@ -56,7 +58,9 @@ export default function App() {
 
   const openSample = useCallback(async (name: string) => {
     const text = await (await fetch(`samples/${name}`)).text();
-    loadDataset(parseDelimited(name.replace(/\.csv$/, ''), text));
+    const d = parseDelimited(name.replace(/\.csv$/, ''), text);
+    const showcase = SAMPLES.find((s) => s.file === name)?.spec;
+    loadDataset(d, showcase ? mergePatch(emptySpec(), showcase) : undefined);
   }, [loadDataset]);
 
   // startup: a dataset handed over by the Python server, else the last session
@@ -92,10 +96,11 @@ export default function App() {
     if (a === 'data') set({ view: s.view === 'data' ? 'figure' : 'data' });
     if (a === 'open') fileInput.current?.click();
     if (a === 'reset' && s.dataset) s.replace(autoSpec(s.dataset));
+    if (a.startsWith('sample:')) openSample(a.slice(7));
     if (a === 'improve') runImprove();
     if (a === 'ideas') set({ ideasOpen: true });
     if (a === 'copy' && s.dataset) copyPNG(s.spec, s.dataset).then(() => notify('Image copied — paste it anywhere'), () => notify('Your browser blocked clipboard images'));
-  }, [set, notify]);
+  }, [set, notify, openSample]);
 
   // keyboard
   useEffect(() => {

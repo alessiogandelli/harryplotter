@@ -1,0 +1,723 @@
+patient,arm,week,age,sex,site,ldl_mmol_l,adverse_event
+P001,placebo,0,40,F,Leiden,3.78,no
+P001,placebo,2,40,F,Leiden,3.84,no
+P001,placebo,4,40,F,Leiden,4.05,no
+P001,placebo,8,40,F,Leiden,3.63,no
+P001,placebo,12,40,F,Leiden,3.94,no
+P002,placebo,0,50,F,Milan,4.47,no
+P002,placebo,2,50,F,Milan,4.7,no
+P002,placebo,4,50,F,Milan,4.61,no
+P002,placebo,8,50,F,Milan,4.34,no
+P002,placebo,12,50,F,Milan,4.3,no
+P003,placebo,0,78,M,Lyon,4.74,no
+P003,placebo,2,78,M,Lyon,4.4,no
+P003,placebo,4,78,M,Lyon,4.34,no
+P003,placebo,8,78,M,Lyon,4.44,no
+P003,placebo,12,78,M,Lyon,4.31,no
+P004,placebo,0,69,M,Milan,4.29,no
+P004,placebo,2,69,M,Milan,4.32,no
+P004,placebo,4,69,M,Milan,4.16,no
+P004,placebo,8,69,M,Milan,4.11,no
+P004,placebo,12,69,M,Milan,4.21,no
+P005,placebo,0,48,M,Basel,4.26,no
+P005,placebo,2,48,M,Basel,4.12,no
+P005,placebo,4,48,M,Basel,3.75,yes
+P005,placebo,8,48,M,Basel,3.98,no
+P005,placebo,12,48,M,Basel,3.98,no
+P006,placebo,0,56,M,Milan,4.74,no
+P006,placebo,2,56,M,Milan,4.86,no
+P006,placebo,4,56,M,Milan,4.69,no
+P006,placebo,8,56,M,Milan,4.63,no
+P006,placebo,12,56,M,Milan,4.94,no
+P007,placebo,0,60,M,Lyon,4.82,no
+P007,placebo,2,60,M,Lyon,4.41,no
+P007,placebo,4,60,M,Lyon,4.41,no
+P008,placebo,0,70,M,Leiden,4.64,no
+P008,placebo,2,70,M,Leiden,4.64,no
+P008,placebo,4,70,M,Leiden,4.55,no
+P008,placebo,8,70,M,Leiden,4.61,no
+P008,placebo,12,70,M,Leiden,4.68,no
+P009,placebo,0,67,F,Leiden,3.02,no
+P009,placebo,2,67,F,Leiden,3.18,no
+P009,placebo,4,67,F,Leiden,3.23,no
+P009,placebo,8,67,F,Leiden,2.98,no
+P009,placebo,12,67,F,Leiden,3.0,no
+P010,placebo,0,61,F,Leiden,4.01,no
+P010,placebo,2,61,F,Leiden,3.79,no
+P010,placebo,4,61,F,Leiden,3.84,no
+P010,placebo,8,61,F,Leiden,3.85,no
+P010,placebo,12,61,F,Leiden,3.92,no
+P011,placebo,0,76,F,Lyon,4.86,no
+P011,placebo,2,76,F,Lyon,4.68,no
+P011,placebo,4,76,F,Lyon,4.99,no
+P012,placebo,0,45,M,Basel,4.88,no
+P012,placebo,2,45,M,Basel,4.39,no
+P012,placebo,4,45,M,Basel,4.78,no
+P012,placebo,8,45,M,Basel,4.27,no
+P012,placebo,12,45,M,Basel,4.83,no
+P013,placebo,0,57,F,Lyon,3.5,no
+P013,placebo,2,57,F,Lyon,3.49,no
+P013,placebo,4,57,F,Lyon,3.14,no
+P013,placebo,8,57,F,Lyon,3.77,no
+P013,placebo,12,57,F,Lyon,3.16,no
+P014,placebo,0,44,M,Lyon,4.24,no
+P014,placebo,2,44,M,Lyon,4.09,no
+P014,placebo,4,44,M,Lyon,3.91,no
+P014,placebo,8,44,M,Lyon,3.89,no
+P014,placebo,12,44,M,Lyon,3.96,yes
+P015,placebo,0,53,F,Basel,3.93,no
+P015,placebo,2,53,F,Basel,4.49,no
+P015,placebo,4,53,F,Basel,4.32,no
+P015,placebo,8,53,F,Basel,4.43,no
+P015,placebo,12,53,F,Basel,3.89,no
+P016,placebo,0,57,F,Milan,4.23,no
+P016,placebo,2,57,F,Milan,4.16,no
+P016,placebo,4,57,F,Milan,3.96,no
+P016,placebo,8,57,F,Milan,4.64,no
+P016,placebo,12,57,F,Milan,4.39,no
+P017,placebo,0,59,M,Milan,5.28,no
+P017,placebo,2,59,M,Milan,4.92,no
+P017,placebo,4,59,M,Milan,4.77,no
+P017,placebo,8,59,M,Milan,5.0,no
+P017,placebo,12,59,M,Milan,4.77,no
+P018,placebo,0,55,M,Milan,4.31,no
+P018,placebo,2,55,M,Milan,4.1,no
+P018,placebo,4,55,M,Milan,3.9,no
+P018,placebo,8,55,M,Milan,4.19,no
+P018,placebo,12,55,M,Milan,4.32,no
+P019,placebo,0,50,M,Milan,5.17,no
+P019,placebo,2,50,M,Milan,5.18,no
+P019,placebo,4,50,M,Milan,5.07,no
+P019,placebo,8,50,M,Milan,5.2,no
+P019,placebo,12,50,M,Milan,5.0,yes
+P020,placebo,0,40,M,Lyon,4.1,no
+P020,placebo,2,40,M,Lyon,4.21,no
+P020,placebo,4,40,M,Lyon,4.04,no
+P020,placebo,8,40,M,Lyon,4.54,no
+P020,placebo,12,40,M,Lyon,4.05,no
+P021,placebo,0,75,M,Basel,3.5,no
+P021,placebo,2,75,M,Basel,3.18,no
+P021,placebo,4,75,M,Basel,2.92,no
+P021,placebo,8,75,M,Basel,3.29,no
+P021,placebo,12,75,M,Basel,3.2,no
+P022,placebo,0,76,F,Leiden,4.83,no
+P022,placebo,2,76,F,Leiden,4.26,no
+P022,placebo,4,76,F,Leiden,4.42,no
+P022,placebo,8,76,F,Leiden,4.43,no
+P022,placebo,12,76,F,Leiden,4.37,no
+P023,placebo,0,68,F,Leiden,3.72,no
+P023,placebo,2,68,F,Leiden,3.99,no
+P023,placebo,4,68,F,Leiden,3.57,no
+P023,placebo,8,68,F,Leiden,3.85,no
+P023,placebo,12,68,F,Leiden,3.73,no
+P024,placebo,0,61,F,Milan,4.45,no
+P024,placebo,2,61,F,Milan,4.54,no
+P024,placebo,4,61,F,Milan,4.34,no
+P024,placebo,8,61,F,Milan,4.18,no
+P024,placebo,12,61,F,Milan,4.14,no
+P025,placebo,0,42,F,Leiden,4.52,no
+P025,placebo,2,42,F,Leiden,4.52,no
+P025,placebo,4,42,F,Leiden,4.26,no
+P025,placebo,8,42,F,Leiden,4.48,no
+P025,placebo,12,42,F,Leiden,4.17,no
+P026,placebo,0,78,F,Lyon,4.42,no
+P026,placebo,2,78,F,Lyon,4.43,no
+P026,placebo,4,78,F,Lyon,4.16,no
+P026,placebo,8,78,F,Lyon,4.6,no
+P026,placebo,12,78,F,Lyon,4.17,no
+P027,placebo,0,58,F,Milan,3.4,no
+P027,placebo,2,58,F,Milan,3.56,no
+P027,placebo,4,58,F,Milan,3.39,no
+P027,placebo,8,58,F,Milan,3.08,no
+P027,placebo,12,58,F,Milan,3.22,no
+P028,placebo,0,38,M,Lyon,6.24,no
+P028,placebo,2,38,M,Lyon,6.2,no
+P028,placebo,4,38,M,Lyon,6.27,no
+P028,placebo,8,38,M,Lyon,6.02,no
+P028,placebo,12,38,M,Lyon,6.17,no
+P029,placebo,0,54,F,Basel,3.96,no
+P029,placebo,2,54,F,Basel,3.5,no
+P029,placebo,4,54,F,Basel,3.86,no
+P029,placebo,8,54,F,Basel,3.94,no
+P029,placebo,12,54,F,Basel,3.62,no
+P030,placebo,0,66,F,Lyon,4.17,no
+P030,placebo,2,66,F,Lyon,4.27,no
+P030,placebo,4,66,F,Lyon,4.58,no
+P030,placebo,8,66,F,Lyon,4.28,no
+P030,placebo,12,66,F,Lyon,3.76,no
+P031,placebo,0,45,M,Lyon,5.62,no
+P031,placebo,2,45,M,Lyon,5.58,no
+P031,placebo,4,45,M,Lyon,5.35,no
+P031,placebo,8,45,M,Lyon,5.04,no
+P031,placebo,12,45,M,Lyon,5.13,no
+P032,placebo,0,38,F,Basel,3.57,no
+P032,placebo,2,38,F,Basel,3.81,no
+P032,placebo,4,38,F,Basel,3.26,no
+P032,placebo,8,38,F,Basel,3.7,no
+P032,placebo,12,38,F,Basel,3.66,no
+P033,placebo,0,58,M,Lyon,4.5,no
+P033,placebo,2,58,M,Lyon,4.54,no
+P033,placebo,4,58,M,Lyon,4.24,no
+P033,placebo,8,58,M,Lyon,4.31,no
+P033,placebo,12,58,M,Lyon,4.52,no
+P034,placebo,0,75,F,Basel,4.52,no
+P034,placebo,2,75,F,Basel,4.8,no
+P034,placebo,4,75,F,Basel,4.46,no
+P034,placebo,8,75,F,Basel,4.46,no
+P034,placebo,12,75,F,Basel,4.73,no
+P035,placebo,0,58,M,Basel,4.96,no
+P035,placebo,2,58,M,Basel,4.89,no
+P035,placebo,4,58,M,Basel,4.42,no
+P035,placebo,8,58,M,Basel,4.5,no
+P035,placebo,12,58,M,Basel,4.55,no
+P036,placebo,0,61,F,Basel,3.68,no
+P036,placebo,2,61,F,Basel,3.62,no
+P036,placebo,4,61,F,Basel,3.48,no
+P037,placebo,0,61,F,Leiden,3.39,no
+P037,placebo,2,61,F,Leiden,3.15,no
+P037,placebo,4,61,F,Leiden,3.52,no
+P037,placebo,8,61,F,Leiden,3.29,no
+P037,placebo,12,61,F,Leiden,3.4,no
+P038,placebo,0,54,F,Basel,3.82,no
+P038,placebo,2,54,F,Basel,3.14,no
+P038,placebo,4,54,F,Basel,3.41,no
+P038,placebo,8,54,F,Basel,3.43,no
+P038,placebo,12,54,F,Basel,3.46,no
+P039,placebo,0,76,M,Lyon,3.67,no
+P039,placebo,2,76,M,Lyon,3.55,yes
+P039,placebo,4,76,M,Lyon,3.48,no
+P039,placebo,8,76,M,Lyon,3.52,no
+P039,placebo,12,76,M,Lyon,3.8,no
+P040,placebo,0,55,F,Basel,4.1,no
+P040,placebo,2,55,F,Basel,4.27,no
+P040,placebo,4,55,F,Basel,4.15,no
+P040,placebo,8,55,F,Basel,3.76,yes
+P040,placebo,12,55,F,Basel,4.05,no
+P041,placebo,0,47,M,Lyon,5.13,no
+P041,placebo,2,47,M,Lyon,5.23,no
+P041,placebo,4,47,M,Lyon,5.16,no
+P041,placebo,8,47,M,Lyon,4.84,no
+P041,placebo,12,47,M,Lyon,4.92,no
+P042,placebo,0,70,F,Lyon,5.21,no
+P042,placebo,2,70,F,Lyon,5.11,no
+P042,placebo,4,70,F,Lyon,5.27,no
+P042,placebo,8,70,F,Lyon,5.0,no
+P042,placebo,12,70,F,Lyon,5.03,no
+P043,placebo,0,79,M,Lyon,5.35,no
+P043,placebo,2,79,M,Lyon,5.28,no
+P043,placebo,4,79,M,Lyon,5.03,no
+P043,placebo,8,79,M,Lyon,4.86,no
+P043,placebo,12,79,M,Lyon,5.12,no
+P044,placebo,0,72,M,Lyon,4.76,no
+P044,placebo,2,72,M,Lyon,4.4,no
+P044,placebo,4,72,M,Lyon,4.75,no
+P044,placebo,8,72,M,Lyon,4.57,no
+P044,placebo,12,72,M,Lyon,4.21,no
+P045,placebo,0,62,M,Leiden,4.45,no
+P045,placebo,2,62,M,Leiden,4.4,no
+P045,placebo,4,62,M,Leiden,4.46,no
+P045,placebo,8,62,M,Leiden,4.28,no
+P045,placebo,12,62,M,Leiden,4.21,no
+P046,placebo,0,60,F,Milan,5.29,no
+P046,placebo,2,60,F,Milan,4.89,no
+P046,placebo,4,60,F,Milan,4.97,yes
+P046,placebo,8,60,F,Milan,5.05,no
+P046,placebo,12,60,F,Milan,4.77,no
+P047,placebo,0,49,M,Lyon,4.75,no
+P047,placebo,2,49,M,Lyon,4.96,no
+P047,placebo,4,49,M,Lyon,4.88,no
+P047,placebo,8,49,M,Lyon,5.01,no
+P047,placebo,12,49,M,Lyon,4.93,no
+P048,placebo,0,68,M,Leiden,4.69,no
+P048,placebo,2,68,M,Leiden,4.33,no
+P048,placebo,4,68,M,Leiden,4.48,no
+P048,placebo,8,68,M,Leiden,4.59,no
+P048,placebo,12,68,M,Leiden,4.4,no
+P049,placebo,0,63,F,Lyon,4.47,no
+P049,placebo,2,63,F,Lyon,4.43,no
+P049,placebo,4,63,F,Lyon,4.22,no
+P049,placebo,8,63,F,Lyon,4.15,no
+P049,placebo,12,63,F,Lyon,4.38,no
+P050,placebo,0,51,F,Lyon,4.89,no
+P050,placebo,2,51,F,Lyon,5.57,no
+P050,placebo,4,51,F,Lyon,4.95,no
+P050,placebo,8,51,F,Lyon,5.1,no
+P050,placebo,12,51,F,Lyon,5.02,no
+P051,10 mg,0,57,F,Basel,5.12,no
+P051,10 mg,2,57,F,Basel,4.35,no
+P051,10 mg,4,57,F,Basel,3.8,no
+P052,10 mg,0,47,M,Basel,4.73,no
+P052,10 mg,2,47,M,Basel,4.24,no
+P052,10 mg,4,47,M,Basel,3.66,no
+P052,10 mg,8,47,M,Basel,3.62,no
+P052,10 mg,12,47,M,Basel,3.7,no
+P053,10 mg,0,66,M,Milan,4.14,no
+P053,10 mg,2,66,M,Milan,3.7,no
+P053,10 mg,4,66,M,Milan,3.73,no
+P053,10 mg,8,66,M,Milan,3.49,no
+P053,10 mg,12,66,M,Milan,3.27,no
+P054,10 mg,0,50,F,Leiden,4.95,no
+P054,10 mg,2,50,F,Leiden,4.07,no
+P054,10 mg,4,50,F,Leiden,3.65,no
+P054,10 mg,8,50,F,Leiden,3.49,no
+P054,10 mg,12,50,F,Leiden,3.68,no
+P055,10 mg,0,66,M,Leiden,4.71,no
+P055,10 mg,2,66,M,Leiden,4.34,no
+P055,10 mg,4,66,M,Leiden,4.0,no
+P055,10 mg,8,66,M,Leiden,3.93,no
+P055,10 mg,12,66,M,Leiden,3.76,no
+P056,10 mg,0,70,F,Milan,4.15,no
+P056,10 mg,2,70,F,Milan,3.92,no
+P056,10 mg,4,70,F,Milan,3.46,no
+P057,10 mg,0,57,M,Lyon,3.81,no
+P057,10 mg,2,57,M,Lyon,3.45,no
+P057,10 mg,4,57,M,Lyon,2.98,no
+P057,10 mg,8,57,M,Lyon,3.04,yes
+P057,10 mg,12,57,M,Lyon,2.59,no
+P058,10 mg,0,69,F,Leiden,4.27,no
+P058,10 mg,2,69,F,Leiden,3.78,no
+P058,10 mg,4,69,F,Leiden,3.55,no
+P058,10 mg,8,69,F,Leiden,3.27,no
+P058,10 mg,12,69,F,Leiden,2.84,no
+P059,10 mg,0,38,M,Milan,4.58,no
+P059,10 mg,2,38,M,Milan,4.01,no
+P059,10 mg,4,38,M,Milan,3.53,no
+P059,10 mg,8,38,M,Milan,3.75,no
+P059,10 mg,12,38,M,Milan,3.65,no
+P060,10 mg,0,49,M,Lyon,5.83,no
+P060,10 mg,2,49,M,Lyon,4.94,no
+P060,10 mg,4,49,M,Lyon,4.84,no
+P060,10 mg,8,49,M,Lyon,4.47,no
+P060,10 mg,12,49,M,Lyon,4.42,no
+P061,10 mg,0,68,M,Lyon,4.26,no
+P061,10 mg,2,68,M,Lyon,3.95,no
+P061,10 mg,4,68,M,Lyon,3.79,no
+P061,10 mg,8,68,M,Lyon,3.05,no
+P061,10 mg,12,68,M,Lyon,3.37,no
+P062,10 mg,0,58,M,Lyon,5.26,no
+P062,10 mg,2,58,M,Lyon,4.32,no
+P062,10 mg,4,58,M,Lyon,4.03,no
+P062,10 mg,8,58,M,Lyon,4.22,no
+P062,10 mg,12,58,M,Lyon,4.03,no
+P063,10 mg,0,71,F,Milan,4.59,no
+P063,10 mg,2,71,F,Milan,3.95,no
+P063,10 mg,4,71,F,Milan,3.9,no
+P063,10 mg,8,71,F,Milan,3.68,no
+P063,10 mg,12,71,F,Milan,3.67,no
+P064,10 mg,0,51,M,Leiden,5.61,no
+P064,10 mg,2,51,M,Leiden,4.7,no
+P064,10 mg,4,51,M,Leiden,4.84,no
+P064,10 mg,8,51,M,Leiden,4.43,no
+P064,10 mg,12,51,M,Leiden,4.53,no
+P065,10 mg,0,78,M,Basel,4.65,no
+P065,10 mg,2,78,M,Basel,4.1,no
+P065,10 mg,4,78,M,Basel,3.85,no
+P065,10 mg,8,78,M,Basel,3.36,no
+P065,10 mg,12,78,M,Basel,3.49,no
+P066,10 mg,0,68,F,Leiden,4.54,no
+P066,10 mg,2,68,F,Leiden,4.39,no
+P066,10 mg,4,68,F,Leiden,4.15,no
+P066,10 mg,8,68,F,Leiden,4.12,no
+P066,10 mg,12,68,F,Leiden,4.03,no
+P067,10 mg,0,53,M,Lyon,4.92,no
+P067,10 mg,2,53,M,Lyon,4.84,no
+P067,10 mg,4,53,M,Lyon,4.7,no
+P067,10 mg,8,53,M,Lyon,4.47,no
+P067,10 mg,12,53,M,Lyon,4.41,no
+P068,10 mg,0,65,F,Milan,4.37,no
+P068,10 mg,2,65,F,Milan,3.94,no
+P068,10 mg,4,65,F,Milan,3.48,no
+P068,10 mg,8,65,F,Milan,3.48,no
+P068,10 mg,12,65,F,Milan,3.75,no
+P069,10 mg,0,47,F,Basel,5.19,no
+P069,10 mg,2,47,F,Basel,4.13,no
+P069,10 mg,4,47,F,Basel,4.32,no
+P069,10 mg,8,47,F,Basel,4.29,no
+P069,10 mg,12,47,F,Basel,4.07,no
+P070,10 mg,0,56,F,Basel,5.38,no
+P070,10 mg,2,56,F,Basel,4.4,no
+P070,10 mg,4,56,F,Basel,4.05,yes
+P070,10 mg,8,56,F,Basel,3.9,no
+P070,10 mg,12,56,F,Basel,3.69,no
+P071,10 mg,0,54,M,Basel,5.18,no
+P071,10 mg,2,54,M,Basel,4.27,no
+P071,10 mg,4,54,M,Basel,4.17,no
+P071,10 mg,8,54,M,Basel,3.76,no
+P071,10 mg,12,54,M,Basel,3.86,no
+P072,10 mg,0,62,F,Milan,4.79,no
+P072,10 mg,2,62,F,Milan,4.79,no
+P072,10 mg,4,62,F,Milan,4.82,no
+P072,10 mg,8,62,F,Milan,4.51,no
+P072,10 mg,12,62,F,Milan,4.61,no
+P073,10 mg,0,65,F,Leiden,4.85,no
+P073,10 mg,2,65,F,Leiden,4.13,no
+P073,10 mg,4,65,F,Leiden,3.84,no
+P073,10 mg,8,65,F,Leiden,3.85,no
+P073,10 mg,12,65,F,Leiden,4.22,no
+P074,10 mg,0,73,M,Milan,4.75,no
+P074,10 mg,2,73,M,Milan,4.42,no
+P074,10 mg,4,73,M,Milan,4.3,no
+P074,10 mg,8,73,M,Milan,4.12,no
+P074,10 mg,12,73,M,Milan,4.02,no
+P075,10 mg,0,39,F,Milan,5.23,no
+P075,10 mg,2,39,F,Milan,4.68,no
+P075,10 mg,4,39,F,Milan,4.64,no
+P075,10 mg,8,39,F,Milan,4.07,no
+P075,10 mg,12,39,F,Milan,4.07,no
+P076,10 mg,0,68,M,Leiden,5.09,no
+P076,10 mg,2,68,M,Leiden,4.26,no
+P076,10 mg,4,68,M,Leiden,3.51,no
+P076,10 mg,8,68,M,Leiden,3.66,yes
+P076,10 mg,12,68,M,Leiden,3.5,no
+P077,10 mg,0,66,F,Lyon,3.97,no
+P077,10 mg,2,66,F,Lyon,3.08,no
+P077,10 mg,4,66,F,Lyon,2.78,no
+P077,10 mg,8,66,F,Lyon,2.33,no
+P077,10 mg,12,66,F,Lyon,2.39,no
+P078,10 mg,0,44,M,Basel,4.62,no
+P078,10 mg,2,44,M,Basel,3.42,no
+P078,10 mg,4,44,M,Basel,2.96,no
+P078,10 mg,8,44,M,Basel,2.94,no
+P078,10 mg,12,44,M,Basel,2.69,no
+P079,10 mg,0,66,M,Milan,3.73,no
+P079,10 mg,2,66,M,Milan,3.11,no
+P079,10 mg,4,66,M,Milan,2.97,no
+P079,10 mg,8,66,M,Milan,2.87,no
+P079,10 mg,12,66,M,Milan,2.5,no
+P080,10 mg,0,48,F,Milan,4.2,no
+P080,10 mg,2,48,F,Milan,3.56,no
+P080,10 mg,4,48,F,Milan,3.59,no
+P080,10 mg,8,48,F,Milan,2.95,no
+P080,10 mg,12,48,F,Milan,3.66,no
+P081,10 mg,0,50,F,Milan,5.31,no
+P081,10 mg,2,50,F,Milan,4.67,no
+P081,10 mg,4,50,F,Milan,4.4,no
+P081,10 mg,8,50,F,Milan,3.84,no
+P081,10 mg,12,50,F,Milan,4.0,no
+P082,10 mg,0,70,M,Leiden,4.43,no
+P082,10 mg,2,70,M,Leiden,3.98,no
+P082,10 mg,4,70,M,Leiden,3.63,no
+P083,10 mg,0,47,F,Basel,5.21,no
+P083,10 mg,2,47,F,Basel,4.47,no
+P083,10 mg,4,47,F,Basel,4.17,no
+P084,10 mg,0,62,F,Lyon,4.72,no
+P084,10 mg,2,62,F,Lyon,3.93,no
+P084,10 mg,4,62,F,Lyon,3.23,no
+P084,10 mg,8,62,F,Lyon,3.4,no
+P084,10 mg,12,62,F,Lyon,3.42,no
+P085,10 mg,0,47,F,Leiden,5.15,no
+P085,10 mg,2,47,F,Leiden,4.12,no
+P085,10 mg,4,47,F,Leiden,3.9,no
+P085,10 mg,8,47,F,Leiden,3.8,no
+P085,10 mg,12,47,F,Leiden,3.66,no
+P086,10 mg,0,63,F,Milan,3.55,no
+P086,10 mg,2,63,F,Milan,3.31,no
+P086,10 mg,4,63,F,Milan,3.47,no
+P086,10 mg,8,63,F,Milan,3.1,no
+P086,10 mg,12,63,F,Milan,3.2,no
+P087,10 mg,0,45,M,Basel,5.36,no
+P087,10 mg,2,45,M,Basel,4.28,no
+P087,10 mg,4,45,M,Basel,4.08,no
+P087,10 mg,8,45,M,Basel,3.53,no
+P087,10 mg,12,45,M,Basel,3.57,no
+P088,10 mg,0,47,F,Milan,2.55,no
+P088,10 mg,2,47,F,Milan,2.35,no
+P088,10 mg,4,47,F,Milan,2.27,no
+P088,10 mg,8,47,F,Milan,2.18,no
+P088,10 mg,12,47,F,Milan,2.13,no
+P089,10 mg,0,46,M,Lyon,5.55,no
+P089,10 mg,2,46,M,Lyon,5.36,no
+P089,10 mg,4,46,M,Lyon,4.31,no
+P089,10 mg,8,46,M,Lyon,4.7,yes
+P089,10 mg,12,46,M,Lyon,4.24,no
+P090,10 mg,0,46,F,Leiden,3.97,no
+P090,10 mg,2,46,F,Leiden,3.72,no
+P090,10 mg,4,46,F,Leiden,3.76,no
+P090,10 mg,8,46,F,Leiden,3.64,no
+P090,10 mg,12,46,F,Leiden,3.73,no
+P091,10 mg,0,70,F,Milan,4.43,no
+P091,10 mg,2,70,F,Milan,4.28,no
+P091,10 mg,4,70,F,Milan,3.89,no
+P091,10 mg,8,70,F,Milan,3.49,no
+P091,10 mg,12,70,F,Milan,4.08,no
+P092,10 mg,0,70,F,Lyon,4.33,no
+P092,10 mg,2,70,F,Lyon,3.5,no
+P092,10 mg,4,70,F,Lyon,3.8,no
+P092,10 mg,8,70,F,Lyon,3.54,no
+P092,10 mg,12,70,F,Lyon,3.5,no
+P093,10 mg,0,65,F,Leiden,4.34,no
+P093,10 mg,2,65,F,Leiden,3.93,no
+P093,10 mg,4,65,F,Leiden,3.65,no
+P093,10 mg,8,65,F,Leiden,3.6,no
+P093,10 mg,12,65,F,Leiden,3.12,no
+P094,10 mg,0,42,F,Milan,5.18,no
+P094,10 mg,2,42,F,Milan,4.75,no
+P094,10 mg,4,42,F,Milan,4.07,no
+P094,10 mg,8,42,F,Milan,4.18,no
+P094,10 mg,12,42,F,Milan,4.3,no
+P095,10 mg,0,66,F,Basel,5.1,yes
+P095,10 mg,2,66,F,Basel,4.54,no
+P095,10 mg,4,66,F,Basel,3.96,no
+P096,10 mg,0,68,F,Leiden,5.39,no
+P096,10 mg,2,68,F,Leiden,4.86,no
+P096,10 mg,4,68,F,Leiden,4.94,no
+P096,10 mg,8,68,F,Leiden,4.54,no
+P096,10 mg,12,68,F,Leiden,4.84,no
+P097,10 mg,0,68,M,Lyon,4.88,no
+P097,10 mg,2,68,M,Lyon,4.12,no
+P097,10 mg,4,68,M,Lyon,3.92,no
+P097,10 mg,8,68,M,Lyon,3.58,no
+P097,10 mg,12,68,M,Lyon,3.46,no
+P098,10 mg,0,51,M,Lyon,4.1,no
+P098,10 mg,2,51,M,Lyon,4.23,no
+P098,10 mg,4,51,M,Lyon,3.72,no
+P098,10 mg,8,51,M,Lyon,3.75,no
+P098,10 mg,12,51,M,Lyon,3.79,no
+P099,10 mg,0,61,F,Lyon,4.64,no
+P099,10 mg,2,61,F,Lyon,3.79,no
+P099,10 mg,4,61,F,Lyon,3.4,no
+P099,10 mg,8,61,F,Lyon,3.43,no
+P099,10 mg,12,61,F,Lyon,3.26,no
+P100,10 mg,0,69,M,Lyon,4.39,no
+P100,10 mg,2,69,M,Lyon,3.82,no
+P100,10 mg,4,69,M,Lyon,3.5,no
+P100,10 mg,8,69,M,Lyon,2.93,no
+P100,10 mg,12,69,M,Lyon,3.11,no
+P101,40 mg,0,53,F,Milan,5.25,no
+P101,40 mg,2,53,F,Milan,3.48,no
+P101,40 mg,4,53,F,Milan,3.08,no
+P101,40 mg,8,53,F,Milan,2.7,no
+P101,40 mg,12,53,F,Milan,2.06,no
+P102,40 mg,0,63,M,Leiden,3.9,no
+P102,40 mg,2,63,M,Leiden,2.83,no
+P102,40 mg,4,63,M,Leiden,2.48,no
+P102,40 mg,8,63,M,Leiden,2.18,no
+P102,40 mg,12,63,M,Leiden,2.06,no
+P103,40 mg,0,72,F,Lyon,4.72,no
+P103,40 mg,2,72,F,Lyon,3.21,no
+P103,40 mg,4,72,F,Lyon,2.91,no
+P103,40 mg,8,72,F,Lyon,2.69,no
+P103,40 mg,12,72,F,Lyon,2.21,no
+P104,40 mg,0,54,F,Lyon,3.54,no
+P104,40 mg,2,54,F,Lyon,2.66,no
+P104,40 mg,4,54,F,Lyon,2.32,no
+P104,40 mg,8,54,F,Lyon,1.93,no
+P104,40 mg,12,54,F,Lyon,2.14,no
+P105,40 mg,0,61,F,Leiden,4.63,no
+P105,40 mg,2,61,F,Leiden,3.33,no
+P105,40 mg,4,61,F,Leiden,2.44,no
+P105,40 mg,8,61,F,Leiden,2.23,no
+P105,40 mg,12,61,F,Leiden,2.05,no
+P106,40 mg,0,77,M,Lyon,4.16,no
+P106,40 mg,2,77,M,Lyon,3.18,no
+P106,40 mg,4,77,M,Lyon,2.44,no
+P106,40 mg,8,77,M,Lyon,2.6,no
+P106,40 mg,12,77,M,Lyon,2.05,no
+P107,40 mg,0,76,M,Milan,4.23,no
+P107,40 mg,2,76,M,Milan,3.41,no
+P107,40 mg,4,76,M,Milan,2.58,no
+P107,40 mg,8,76,M,Milan,2.85,no
+P107,40 mg,12,76,M,Milan,2.67,no
+P108,40 mg,0,61,M,Lyon,4.8,no
+P108,40 mg,2,61,M,Lyon,3.45,no
+P108,40 mg,4,61,M,Lyon,3.56,no
+P109,40 mg,0,74,M,Milan,4.68,no
+P109,40 mg,2,74,M,Milan,4.1,no
+P109,40 mg,4,74,M,Milan,3.2,no
+P109,40 mg,8,74,M,Milan,3.15,no
+P109,40 mg,12,74,M,Milan,2.91,no
+P110,40 mg,0,66,M,Leiden,5.73,no
+P110,40 mg,2,66,M,Leiden,3.87,no
+P110,40 mg,4,66,M,Leiden,3.3,no
+P110,40 mg,8,66,M,Leiden,2.72,no
+P110,40 mg,12,66,M,Leiden,2.34,no
+P111,40 mg,0,74,M,Milan,4.12,no
+P111,40 mg,2,74,M,Milan,3.01,no
+P111,40 mg,4,74,M,Milan,2.15,no
+P112,40 mg,0,65,F,Lyon,4.18,no
+P112,40 mg,2,65,F,Lyon,3.42,no
+P112,40 mg,4,65,F,Lyon,3.22,no
+P112,40 mg,8,65,F,Lyon,3.2,no
+P112,40 mg,12,65,F,Lyon,3.07,no
+P113,40 mg,0,69,M,Basel,3.91,no
+P113,40 mg,2,69,M,Basel,3.24,no
+P113,40 mg,4,69,M,Basel,2.6,no
+P113,40 mg,8,69,M,Basel,2.59,no
+P113,40 mg,12,69,M,Basel,2.21,no
+P114,40 mg,0,73,M,Basel,4.59,no
+P114,40 mg,2,73,M,Basel,3.44,yes
+P114,40 mg,4,73,M,Basel,2.94,no
+P114,40 mg,8,73,M,Basel,3.41,yes
+P114,40 mg,12,73,M,Basel,2.93,no
+P115,40 mg,0,73,F,Lyon,3.31,no
+P115,40 mg,2,73,F,Lyon,2.66,no
+P115,40 mg,4,73,F,Lyon,2.02,no
+P115,40 mg,8,73,F,Lyon,1.79,no
+P115,40 mg,12,73,F,Lyon,1.82,no
+P116,40 mg,0,48,F,Basel,4.55,no
+P116,40 mg,2,48,F,Basel,3.2,no
+P116,40 mg,4,48,F,Basel,3.13,no
+P116,40 mg,8,48,F,Basel,2.56,no
+P116,40 mg,12,48,F,Basel,2.66,no
+P117,40 mg,0,79,M,Leiden,3.71,no
+P117,40 mg,2,79,M,Leiden,2.84,no
+P117,40 mg,4,79,M,Leiden,2.08,no
+P117,40 mg,8,79,M,Leiden,2.02,no
+P117,40 mg,12,79,M,Leiden,1.66,no
+P118,40 mg,0,79,F,Milan,4.39,no
+P118,40 mg,2,79,F,Milan,3.34,no
+P118,40 mg,4,79,F,Milan,2.91,yes
+P118,40 mg,8,79,F,Milan,2.63,no
+P118,40 mg,12,79,F,Milan,2.5,no
+P119,40 mg,0,61,M,Leiden,4.15,no
+P119,40 mg,2,61,M,Leiden,3.49,no
+P119,40 mg,4,61,M,Leiden,3.24,no
+P119,40 mg,8,61,M,Leiden,2.93,no
+P119,40 mg,12,61,M,Leiden,2.88,no
+P120,40 mg,0,57,F,Milan,3.91,no
+P120,40 mg,2,57,F,Milan,2.71,no
+P120,40 mg,4,57,F,Milan,2.35,no
+P120,40 mg,8,57,F,Milan,2.0,no
+P120,40 mg,12,57,F,Milan,1.55,no
+P121,40 mg,0,65,F,Lyon,3.24,no
+P121,40 mg,2,65,F,Lyon,2.81,no
+P121,40 mg,4,65,F,Lyon,2.71,no
+P121,40 mg,8,65,F,Lyon,1.8,no
+P121,40 mg,12,65,F,Lyon,2.39,no
+P122,40 mg,0,41,F,Leiden,3.29,no
+P122,40 mg,2,41,F,Leiden,2.69,no
+P122,40 mg,4,41,F,Leiden,2.37,no
+P122,40 mg,8,41,F,Leiden,1.94,no
+P122,40 mg,12,41,F,Leiden,2.26,no
+P123,40 mg,0,52,F,Basel,4.44,no
+P123,40 mg,2,52,F,Basel,3.44,no
+P123,40 mg,4,52,F,Basel,2.98,no
+P123,40 mg,8,52,F,Basel,2.48,no
+P123,40 mg,12,52,F,Basel,2.56,no
+P124,40 mg,0,63,M,Lyon,4.59,no
+P124,40 mg,2,63,M,Lyon,3.63,no
+P124,40 mg,4,63,M,Lyon,3.21,no
+P124,40 mg,8,63,M,Lyon,2.45,no
+P124,40 mg,12,63,M,Lyon,2.43,no
+P125,40 mg,0,54,M,Leiden,4.1,no
+P125,40 mg,2,54,M,Leiden,2.44,no
+P125,40 mg,4,54,M,Leiden,1.78,no
+P125,40 mg,8,54,M,Leiden,1.86,no
+P125,40 mg,12,54,M,Leiden,1.63,no
+P126,40 mg,0,51,F,Lyon,4.66,no
+P126,40 mg,2,51,F,Lyon,3.47,no
+P126,40 mg,4,51,F,Lyon,3.12,no
+P126,40 mg,8,51,F,Lyon,3.01,no
+P126,40 mg,12,51,F,Lyon,2.73,no
+P127,40 mg,0,53,M,Lyon,5.0,no
+P127,40 mg,2,53,M,Lyon,3.37,no
+P127,40 mg,4,53,M,Lyon,2.58,no
+P127,40 mg,8,53,M,Lyon,2.23,no
+P127,40 mg,12,53,M,Lyon,1.8,no
+P128,40 mg,0,66,F,Lyon,3.92,no
+P128,40 mg,2,66,F,Lyon,3.21,no
+P128,40 mg,4,66,F,Lyon,2.9,no
+P128,40 mg,8,66,F,Lyon,2.65,no
+P128,40 mg,12,66,F,Lyon,2.58,no
+P129,40 mg,0,43,F,Milan,4.22,no
+P129,40 mg,2,43,F,Milan,2.97,no
+P129,40 mg,4,43,F,Milan,2.19,no
+P129,40 mg,8,43,F,Milan,2.04,no
+P129,40 mg,12,43,F,Milan,1.85,no
+P130,40 mg,0,45,F,Milan,5.3,no
+P130,40 mg,2,45,F,Milan,4.05,no
+P130,40 mg,4,45,F,Milan,3.69,no
+P130,40 mg,8,45,F,Milan,3.38,no
+P130,40 mg,12,45,F,Milan,3.4,yes
+P131,40 mg,0,72,F,Milan,4.12,no
+P131,40 mg,2,72,F,Milan,2.5,no
+P131,40 mg,4,72,F,Milan,1.88,no
+P132,40 mg,0,71,M,Leiden,3.78,no
+P132,40 mg,2,71,M,Leiden,2.99,no
+P132,40 mg,4,71,M,Leiden,2.49,no
+P132,40 mg,8,71,M,Leiden,1.71,no
+P132,40 mg,12,71,M,Leiden,2.04,no
+P133,40 mg,0,59,F,Lyon,5.05,no
+P133,40 mg,2,59,F,Lyon,3.55,no
+P133,40 mg,4,59,F,Lyon,3.14,no
+P133,40 mg,8,59,F,Lyon,3.07,no
+P133,40 mg,12,59,F,Lyon,3.03,no
+P134,40 mg,0,60,M,Leiden,5.29,no
+P134,40 mg,2,60,M,Leiden,3.63,no
+P134,40 mg,4,60,M,Leiden,3.07,no
+P135,40 mg,0,42,F,Leiden,4.22,no
+P135,40 mg,2,42,F,Leiden,3.42,no
+P135,40 mg,4,42,F,Leiden,3.5,yes
+P135,40 mg,8,42,F,Leiden,3.23,no
+P135,40 mg,12,42,F,Leiden,3.29,yes
+P136,40 mg,0,51,F,Leiden,4.42,no
+P136,40 mg,2,51,F,Leiden,3.36,no
+P136,40 mg,4,51,F,Leiden,2.71,no
+P136,40 mg,8,51,F,Leiden,2.22,yes
+P136,40 mg,12,51,F,Leiden,2.42,no
+P137,40 mg,0,48,M,Milan,5.03,yes
+P137,40 mg,2,48,M,Milan,4.01,no
+P137,40 mg,4,48,M,Milan,3.36,no
+P137,40 mg,8,48,M,Milan,3.16,no
+P137,40 mg,12,48,M,Milan,3.65,no
+P138,40 mg,0,71,F,Leiden,4.54,no
+P138,40 mg,2,71,F,Leiden,4.01,no
+P138,40 mg,4,71,F,Leiden,3.62,yes
+P138,40 mg,8,71,F,Leiden,3.61,no
+P138,40 mg,12,71,F,Leiden,3.51,yes
+P139,40 mg,0,59,F,Basel,4.16,no
+P139,40 mg,2,59,F,Basel,3.4,no
+P139,40 mg,4,59,F,Basel,2.89,no
+P139,40 mg,8,59,F,Basel,2.61,no
+P139,40 mg,12,59,F,Basel,2.47,no
+P140,40 mg,0,61,M,Milan,4.42,no
+P140,40 mg,2,61,M,Milan,3.7,no
+P140,40 mg,4,61,M,Milan,2.77,no
+P140,40 mg,8,61,M,Milan,2.58,no
+P140,40 mg,12,61,M,Milan,2.15,no
+P141,40 mg,0,52,F,Lyon,4.13,no
+P141,40 mg,2,52,F,Lyon,3.55,no
+P141,40 mg,4,52,F,Lyon,2.83,no
+P141,40 mg,8,52,F,Lyon,2.81,no
+P141,40 mg,12,52,F,Lyon,2.77,no
+P142,40 mg,0,74,M,Leiden,4.95,no
+P142,40 mg,2,74,M,Leiden,3.76,no
+P142,40 mg,4,74,M,Leiden,3.64,no
+P142,40 mg,8,74,M,Leiden,3.1,no
+P142,40 mg,12,74,M,Leiden,2.99,no
+P143,40 mg,0,57,M,Lyon,4.78,no
+P143,40 mg,2,57,M,Lyon,3.83,no
+P143,40 mg,4,57,M,Lyon,3.99,no
+P143,40 mg,8,57,M,Lyon,3.06,no
+P143,40 mg,12,57,M,Lyon,3.38,no
+P144,40 mg,0,45,F,Lyon,3.83,no
+P144,40 mg,2,45,F,Lyon,3.12,no
+P144,40 mg,4,45,F,Lyon,2.38,no
+P145,40 mg,0,42,F,Basel,4.67,no
+P145,40 mg,2,42,F,Basel,3.18,no
+P145,40 mg,4,42,F,Basel,2.72,no
+P145,40 mg,8,42,F,Basel,2.25,no
+P145,40 mg,12,42,F,Basel,2.1,no
+P146,40 mg,0,54,M,Leiden,5.22,no
+P146,40 mg,2,54,M,Leiden,4.9,no
+P146,40 mg,4,54,M,Leiden,4.42,no
+P146,40 mg,8,54,M,Leiden,4.11,no
+P146,40 mg,12,54,M,Leiden,4.23,no
+P147,40 mg,0,60,F,Leiden,4.71,no
+P147,40 mg,2,60,F,Leiden,4.22,no
+P147,40 mg,4,60,F,Leiden,3.39,no
+P147,40 mg,8,60,F,Leiden,3.45,no
+P147,40 mg,12,60,F,Leiden,3.24,no
+P148,40 mg,0,63,F,Milan,4.92,no
+P148,40 mg,2,63,F,Milan,3.63,no
+P148,40 mg,4,63,F,Milan,2.86,yes
+P149,40 mg,0,42,F,Basel,5.07,no
+P149,40 mg,2,42,F,Basel,3.66,no
+P149,40 mg,4,42,F,Basel,3.58,no
+P149,40 mg,8,42,F,Basel,2.94,no
+P149,40 mg,12,42,F,Basel,2.53,no
+P150,40 mg,0,73,M,Basel,5.25,no
+P150,40 mg,2,73,M,Basel,4.74,no
+P150,40 mg,4,73,M,Basel,4.03,no
+P150,40 mg,8,73,M,Basel,3.98,no
+P150,40 mg,12,73,M,Basel,3.45,no

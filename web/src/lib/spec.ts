@@ -8,7 +8,7 @@ import type {
 export interface Palette {
   id: string;
   label: string;
-  kind: 'categorical' | 'sequential';
+  kind: 'categorical' | 'sequential' | 'diverging';
   colors: string[];
   /** d3 / Observable Plot scheme name for continuous use */
   scheme?: string;
@@ -41,12 +41,17 @@ export const PALETTES: Palette[] = [
     colors: ['#8DA0CB', '#FC8D62', '#66C2A5', '#E78AC3', '#A6D854', '#FFD92F', '#E5C494', '#B3B3B3'],
   },
   {
+    id: 'updown', label: 'Down · Up · n.s.', kind: 'categorical', note: 'volcano plots',
+    colors: ['#2B6CB0', '#C0392B', '#BDBDBD', '#E69F00', '#009E73', '#CC79A7'],
+  },
+  {
     id: 'grayscale', label: 'Grayscale', kind: 'categorical', note: 'print safe',
     colors: ['#1a1a1a', '#6e6e6e', '#a8a8a8', '#d0d0d0', '#444444', '#8c8c8c'],
   },
   { id: 'viridis', label: 'Viridis', kind: 'sequential', scheme: 'viridis', colors: ['#440154', '#3b528b', '#21918c', '#5ec962', '#fde725'] },
   { id: 'cividis', label: 'Cividis', kind: 'sequential', scheme: 'cividis', colors: ['#00224e', '#3d4d6e', '#7d7c78', '#bcaf6f', '#fee838'] },
   { id: 'magma', label: 'Magma', kind: 'sequential', scheme: 'magma', colors: ['#000004', '#51127c', '#b73779', '#fc8961', '#fcfdbf'] },
+  { id: 'rdbu', label: 'Blue – Red', kind: 'diverging', scheme: 'rdbu', note: 'centred on 0', colors: ['#2166ac', '#92c5de', '#f7f7f7', '#f4a582', '#b2182b'] },
   { id: 'blues', label: 'Blues', kind: 'sequential', scheme: 'blues', colors: ['#deebf7', '#9ecae1', '#4292c6', '#08519c', '#08306b'] },
 ];
 
@@ -56,6 +61,7 @@ export const paletteById = (id: string) => PALETTES.find((p) => p.id === id) ?? 
 export function categoricalColors(id: string): string[] {
   const p = paletteById(id);
   if (p.kind === 'categorical') return p.colors;
+  if (p.kind === 'diverging') return [p.colors[0], p.colors[4], p.colors[1], p.colors[3]];
   // sample the sequential ramp, skipping the pale end so marks stay visible
   return [p.colors[0], p.colors[2], p.colors[3], p.colors[1], p.colors[4]];
 }
@@ -63,7 +69,17 @@ export function categoricalColors(id: string): string[] {
 /** Scheme for continuous colour (numeric colour column, heatmap). */
 export function sequentialScheme(id: string): string {
   const p = paletteById(id);
-  return p.kind === 'sequential' && p.scheme ? p.scheme : 'viridis';
+  return p.kind !== 'categorical' && p.scheme ? p.scheme : 'viridis';
+}
+
+/** Observable Plot colour scale for continuous values; diverging palettes pivot on 0, cold = blue. */
+export function continuousColor(id: string, domain?: [number, number]): Record<string, unknown> {
+  const p = paletteById(id);
+  if (p.kind === 'diverging') {
+    const m = domain ? Math.max(Math.abs(domain[0]), Math.abs(domain[1])) : undefined;
+    return { type: 'diverging', scheme: p.scheme, reverse: true, pivot: 0, clamp: true, ...(m ? { domain: [-m, m] } : {}) };
+  }
+  return { type: 'linear', scheme: sequentialScheme(id), ...(domain ? { domain } : {}) };
 }
 
 // ---------------------------------------------------------------- size presets
@@ -332,7 +348,11 @@ const UNITS: Record<string, string> = {
   c: '°C', degc: '°C', k: 'K', pct: '%', percent: '%', perc: '%', hz: 'Hz', khz: 'kHz', mv: 'mV', v: 'V', w: 'W', kwh: 'kWh',
   mm2: 'mm²', m2: 'm²', mmhg: 'mmHg', bpm: 'bpm', usd: 'USD', eur: 'EUR', mol: 'mol', mm_l: 'mmol/L', um_l: 'µmol/L', au: 'a.u.',
 };
-const ACRONYMS = new Set(['od600', 'od', 'ph', 'id', 'dna', 'rna', 'bmi', 'gdp', 'co2', 'ci', 'sd', 'se', 'rt', 'iq', 'hr', 'bp', 'auc', 'pca', 'ec50', 'ic50', 'gfp', 'uv', 'rpm', 'cpu', 'gpu']);
+const CASED_UNITS: Record<string, string> = {
+  uM: 'µM', nM: 'nM', mM: 'mM', pM: 'pM', mL: 'mL', uL: 'µL', kDa: 'kDa', Da: 'Da',
+  mmol_l: 'mmol/L', umol_l: 'µmol/L', nmol_l: 'nmol/L', mg_dl: 'mg/dL', g_l: 'g/L', mg_l: 'mg/L', ng_ml: 'ng/mL', ug_ml: 'µg/mL', pg_ml: 'pg/mL',
+};
+const ACRONYMS = new Set(['od600', 'od', 'ph', 'id', 'dna', 'rna', 'ldl', 'hdl', 'crp', 'il6', 'tnf', 'mri', 'eeg', 'ecg', 'fmri', 'rnaseq', 'bmi', 'gdp', 'co2', 'ci', 'sd', 'se', 'rt', 'iq', 'hr', 'bp', 'auc', 'pca', 'ec50', 'ic50', 'gfp', 'uv', 'rpm', 'cpu', 'gpu']);
 
 const acronym = (w: string) => w.toUpperCase().replace('OD600', 'OD₆₀₀').replace('PH', 'pH').replace('CO2', 'CO₂');
 
@@ -340,6 +360,9 @@ const acronym = (w: string) => w.toUpperCase().replace('OD600', 'OD₆₀₀').r
 export function prettify(name?: string): string {
   if (!name) return '';
   if (ACRONYMS.has(name.toLowerCase())) return acronym(name);
+  // units whose case matters (uM ≠ um) or that span two tokens (mmol_l)
+  const cased = name.match(/^(.*?)[_ .]+(uM|nM|mM|pM|mL|uL|kDa|Da|mmol_l|umol_l|nmol_l|mg_dl|g_l|mg_l|ng_ml|ug_ml|pg_ml)$/);
+  if (cased && cased[1]) return `${prettify(cased[1])} (${CASED_UNITS[cased[2]]})`;
   const parts = name.replace(/([a-z])([A-Z])/g, '$1 $2').split(/[\s_.]+/).filter(Boolean);
   let unit = '';
   if (parts.length > 1) {

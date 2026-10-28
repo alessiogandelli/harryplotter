@@ -7,6 +7,7 @@ import { toCSV } from '../lib/data';
 import { copyPNG, download, exportFigure, fileBase, type ExportFormat } from '../lib/export';
 import { presetById } from '../lib/spec';
 import { useStore } from '../store';
+import { SAMPLES } from './Welcome';
 
 function Modal({ title, onClose, children, wide }: { title: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean }) {
   useEffect(() => {
@@ -38,7 +39,7 @@ export function CommandPalette({ onApp }: { onApp: (action: string) => void }) {
   const [sel, setSel] = useState(0);
   const list = useRef<HTMLUListElement>(null);
 
-  const all = useMemo(() => commands(dataset, spec), [dataset, spec]);
+  const all = useMemo(() => commands(dataset, spec, SAMPLES), [dataset, spec]);
   const results = useMemo(() => {
     if (!q.trim()) return all.filter((c) => !c.id.startsWith('enc:') || c.id.includes(':none')).slice(0, 60);
     return all.map((c) => ({ c, s: score(c, q) })).filter((x) => x.s >= 0).sort((a, b) => b.s - a.s).slice(0, 60).map((x) => x.c);

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { quickIntent } from '../commands';
-import { parseDelimited } from '../data';
+import { levels, parseDelimited } from '../data';
 import { autoSpec, suggest } from '../suggest';
 
 const d = parseDelimited('rt', readFileSync(join(__dirname, '../../../public/samples/reaction_times.csv'), 'utf8'));
@@ -25,6 +25,14 @@ describe('offline phrases', () => {
 
   it('returns null for gibberish', () => {
     expect(quickIntent('qwerty zxcv', autoSpec(d), d)).toBeNull();
+  });
+});
+
+describe('natural order', () => {
+  it('puts the control group first and doses in increasing order', () => {
+    expect(levels(d.rows, 'condition')).toEqual(['control', 'low dose', 'high dose']);
+    expect(levels([{ m: 'Mar' }, { m: 'Jan' }, { m: 'Feb' }], 'm')).toEqual(['Jan', 'Feb', 'Mar']);
+    expect(levels([{ r: 'n.s.' }, { r: 'up' }, { r: 'down' }], 'r')).toEqual(['down', 'up', 'n.s.']);
   });
 });
 

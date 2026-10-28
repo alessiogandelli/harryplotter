@@ -10,6 +10,8 @@ describe('prettify', () => {
     expect(prettify('stance_confidence')).toBe('Stance confidence');
     expect(prettify('bodyMass_kg')).toBe('Body mass (kg)');
     expect(prettify('pH')).toBe('pH');
+    expect(prettify('conc_uM')).toBe('Conc (µM)');
+    expect(prettify('ldl_mmol_l')).toBe('LDL (mmol/L)');
   });
 });
 
