@@ -56,14 +56,27 @@ class AIConfig:
         return bool(self.api_key)
 
 
+# Newer OpenAI models (gpt-5/6, o-series) reject `max_tokens` and only accept the
+# default temperature, so they need `max_completion_tokens` and no temperature.
+_NEW_OPENAI_PREFIXES = ("gpt-5", "gpt-6", "o1", "o3", "o4")
+
+
+def _uses_completion_tokens(model: str) -> bool:
+    return (model or "").lower().startswith(_NEW_OPENAI_PREFIXES)
+
+
 def complete(cfg: AIConfig, messages: list) -> dict:
-    body = json.dumps({
+    payload = {
         "model": cfg.model,
         "messages": messages,
-        "temperature": 0.2,
-        "max_tokens": 4000,
         "response_format": {"type": "json_object"},
-    }).encode()
+    }
+    if _uses_completion_tokens(cfg.model):
+        payload["max_completion_tokens"] = 4000
+    else:
+        payload["max_tokens"] = 4000
+        payload["temperature"] = 0.2
+    body = json.dumps(payload).encode()
     req = urllib.request.Request(
         f"{cfg.base_url}/chat/completions",
         data=body,
