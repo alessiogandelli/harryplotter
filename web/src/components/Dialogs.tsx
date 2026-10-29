@@ -1,6 +1,7 @@
-import { Check, Copy, Download, FileCode2, FileImage, FileText, KeyRound, Search, X } from 'lucide-react';
+import { Check, CircleSlash, Copy, Download, FileCode2, FileImage, FileText, KeyRound, Loader2, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { loadSettings, saveSettings, serverHasAI, type AISettings } from '../lib/ai';
+import { aiSource, loadSettings, saveSettings, serverHasAI, testLocal, type AIMode, type AISettings, type AISource } from '../lib/ai';
+import { Segmented } from './controls';
 import { toJSON, toPython, toR } from '../lib/codegen';
 import { commands, score } from '../lib/commands';
 import { toCSV } from '../lib/data';
@@ -185,38 +186,109 @@ export function ExportDialog({ initialTab = 'image' }: { initialTab?: 'image' | 
 
 // ---------------------------------------------------------------- settings
 
+const MODES: { value: AIMode; label: string; title: string }[] = [
+  { value: 'auto', label: 'Auto', title: 'Use the Harry server when it is on, otherwise your key' },
+  { value: 'server', label: 'Server', title: 'Only the Harry Plotter server' },
+  { value: 'key', label: 'My key', title: 'An OpenAI-compatible API with your own key' },
+  { value: 'local', label: 'Local model', title: 'A model running on this computer (Ollama, LM Studio…)' },
+  { value: 'off', label: 'Off', title: 'No AI: nothing about your data leaves this browser' },
+];
+
 export function SettingsDialog() {
   const set = useStore((s) => s.set);
   const [s, setS] = useState<AISettings>(loadSettings());
-  const [server, setServer] = useState<boolean | null>(null);
-  useEffect(() => { serverHasAI().then(setServer); }, []);
+  const [source, setSource] = useState<AISource | null>(null);
+  const [testing, setTesting] = useState(false);
   const close = () => set({ settingsOpen: false });
+  const refresh = async (next = s) => {
+    saveSettings(next);
+    setTesting(true);
+    await serverHasAI(true);
+    let src = await aiSource();
+    if (src.kind === 'local') {
+      const err = await testLocal(next);
+      if (err) src = { kind: 'none', label: 'Local model', detail: err };
+    }
+    setSource(src);
+    setTesting(false);
+  };
+  useEffect(() => { refresh(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const patch = (p: Partial<AISettings>) => setS({ ...s, ...p });
 
   return (
     <Modal title={<><KeyRound size={16} /> AI assistant</>} onClose={close}>
       <div className="settings">
-        {server ? (
-          <p className="ok-box"><Check size={15} /> Connected through the Harry Plotter server — the key stays on the server.</p>
-        ) : (
+        <Segmented value={s.mode} onChange={(mode) => { const n = { ...s, mode }; setS(n); refresh(n); }} options={MODES} />
+
+        <p className={`ai-status ${source?.kind === 'none' ? 'off' : 'on'}`}>
+          {testing ? <Loader2 size={14} className="spin" /> : source?.kind === 'none' ? <CircleSlash size={14} /> : <Check size={14} />}
+          {testing ? 'Checking…' : source ? <><b>{source.label}</b>{source.detail ? ` · ${source.detail}` : ''}</> : ''}
+        </p>
+
+        {(s.mode === 'auto' || s.mode === 'server') && (
+          <label className="field"><span className="field-label">Harry Plotter server</span>
+            <input className="input" value={s.serverUrl} onChange={(e) => patch({ serverUrl: e.target.value })} placeholder={DEFAULT_SERVER_HINT} />
+          </label>
+        )}
+
+        {(s.mode === 'auto' || s.mode === 'key') && (
           <>
-            <p className="muted small">Harry works without AI: every control, ⌘K and short phrases (“log y”, “color by group”). For free-form requests connect any OpenAI-compatible API — OpenRouter, OpenAI, a local Ollama or LM Studio. The key stays in this browser.</p>
-            <label className="field"><span className="field-label">API base URL</span><input className="input" value={s.baseUrl} onChange={(e) => setS({ ...s, baseUrl: e.target.value })} placeholder="https://openrouter.ai/api/v1" /></label>
-            <label className="field"><span className="field-label">API key</span><input className="input" type="password" value={s.apiKey} onChange={(e) => setS({ ...s, apiKey: e.target.value })} placeholder="sk-…" autoComplete="off" /></label>
-            <label className="field"><span className="field-label">Model</span><input className="input" value={s.model} onChange={(e) => setS({ ...s, model: e.target.value })} placeholder="deepseek/deepseek-v4.1-flash" /></label>
+            {s.mode === 'auto' && <p className="muted small">When the server is off, your own key is used (if you add one):</p>}
+            <label className="field"><span className="field-label">API base URL</span><input className="input" value={s.baseUrl} onChange={(e) => patch({ baseUrl: e.target.value })} placeholder="https://openrouter.ai/api/v1" /></label>
+            <label className="field"><span className="field-label">API key</span><input className="input" type="password" value={s.apiKey} onChange={(e) => patch({ apiKey: e.target.value })} placeholder="sk-…" autoComplete="off" /></label>
+            <label className="field"><span className="field-label">Model</span><input className="input" value={s.model} onChange={(e) => patch({ model: e.target.value })} placeholder="deepseek/deepseek-v4.1-flash" /></label>
             <div className="presets-row">
               {[
                 ['OpenRouter', 'https://openrouter.ai/api/v1', 'deepseek/deepseek-v4.1-flash'],
                 ['OpenAI', 'https://api.openai.com/v1', 'gpt-5-mini'],
-                ['Ollama (local)', 'http://localhost:11434/v1', 'qwen2.5:7b'],
-              ].map(([n, u, m]) => <button key={n} type="button" className="chip" onClick={() => setS({ ...s, baseUrl: u, model: m })}>{n}</button>)}
+              ].map(([n, u, m]) => <button key={n} type="button" className="chip" onClick={() => patch({ baseUrl: u, model: m })}>{n}</button>)}
             </div>
-            <div className="modal-actions">
-              {s.apiKey && <button type="button" className="btn" onClick={() => { const c = { ...s, apiKey: '' }; setS(c); saveSettings(c); }}>Forget key</button>}
-              <button type="button" className="btn primary" onClick={() => { saveSettings(s); close(); }}>Save</button>
-            </div>
+            <p className="muted small">The key stays in this browser and goes only to that address.</p>
           </>
         )}
+
+        {s.mode === 'local' && (
+          <>
+            <label className="field"><span className="field-label">Local server (OpenAI-compatible)</span><input className="input" value={s.localUrl} onChange={(e) => patch({ localUrl: e.target.value })} placeholder="http://localhost:11434/v1" /></label>
+            <label className="field"><span className="field-label">Model</span><input className="input" value={s.localModel} onChange={(e) => patch({ localModel: e.target.value })} placeholder="qwen2.5vl:7b" /></label>
+            <div className="presets-row">
+              {[
+                ['Ollama', 'http://localhost:11434/v1', 'qwen2.5vl:7b'],
+                ['LM Studio', 'http://localhost:1234/v1', 'qwen2.5-vl-7b-instruct'],
+                ['llama.cpp', 'http://localhost:8080/v1', 'default'],
+              ].map(([n, u, m]) => <button key={n} type="button" className="chip" onClick={() => patch({ localUrl: u, localModel: m })}>{n}</button>)}
+            </div>
+            {!isLocalPage() && (
+              <div className="hint-box">
+                The editor runs on <code>{location.origin}</code>, so your local model must allow it:
+                <ul>
+                  <li><b>Ollama:</b> start it with <code>OLLAMA_ORIGINS={location.origin} ollama serve</code></li>
+                  <li><b>LM Studio:</b> Developer → Server settings → enable <i>CORS</i></li>
+                  <li><b>llama.cpp:</b> <code>llama-server</code> already allows any origin</li>
+                </ul>
+                Your browser may ask permission to reach devices on your network: allow it. Safari can block this entirely; use Chrome, Edge or Firefox, or run Harry on your computer (<code>pip install harryplotter</code>).
+              </div>
+            )}
+            <p className="muted small">Pick a vision model (e.g. qwen2.5-vl) so “Improve” can look at the figure.</p>
+          </>
+        )}
+
+        {s.mode !== 'off' && (
+          <details className="privacy">
+            <summary>What the AI sees</summary>
+            Column names, up to 8 example values per column, summary statistics (ranges, means, group sizes, correlations) and the figure settings; for “Improve”, a picture of the figure. Never your rows. Choose <b>Off</b> for sensitive data: everything else keeps working.
+          </details>
+        )}
+
+        <div className="modal-actions">
+          {s.apiKey && (s.mode === 'auto' || s.mode === 'key') && <button type="button" className="btn" onClick={() => { const c = { ...s, apiKey: '' }; setS(c); refresh(c); }}>Forget key</button>}
+          <button type="button" className="btn" onClick={() => refresh()} disabled={testing}>Test</button>
+          <button type="button" className="btn primary" onClick={() => { saveSettings(s); close(); }}>Save</button>
+        </div>
       </div>
     </Modal>
   );
 }
+
+const DEFAULT_SERVER_HINT = (import.meta.env.VITE_HP_SERVER as string | undefined) || 'same address as the editor';
+const isLocalPage = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);

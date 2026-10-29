@@ -4,36 +4,99 @@
 import { DEFAULT_STATS, MARKS, PALETTES, PRESETS, normalizeSpec } from './spec';
 import type { Dataset, Spec } from './types';
 
-export interface AISettings { baseUrl: string; apiKey: string; model: string }
+/**
+ * Where the AI comes from. The hosted editor is a static site: when its Harry Plotter
+ * server is on, requests go there (the key stays on the server); when it is off, the
+ * researcher can use their own key, a model running on their machine, or no AI at all.
+ */
+export type AIMode = 'auto' | 'server' | 'key' | 'local' | 'off';
+
+export interface AISettings {
+  mode: AIMode;
+  /** Harry Plotter server; empty = the same address as the editor (or the build default) */
+  serverUrl: string;
+  /** your own key: any OpenAI-compatible API */
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+  /** a model on this computer: Ollama, LM Studio, llama.cpp… (no key) */
+  localUrl: string;
+  localModel: string;
+}
 
 const SETTINGS_KEY = 'harryplotter.ai';
+
+/** Set at build time for the hosted editor, e.g. VITE_HP_SERVER=https://api.harryplotter.example */
+const DEFAULT_SERVER: string = (import.meta.env.VITE_HP_SERVER as string | undefined) ?? '';
+
+const DEFAULTS: AISettings = {
+  mode: 'auto', serverUrl: '',
+  baseUrl: 'https://openrouter.ai/api/v1', apiKey: '', model: 'deepseek/deepseek-v4.1-flash',
+  localUrl: 'http://localhost:11434/v1', localModel: 'qwen2.5vl:7b',
+};
 
 export function loadSettings(): AISettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (raw) return { baseUrl: '', apiKey: '', model: '', ...JSON.parse(raw) };
+    if (raw) return { ...DEFAULTS, ...JSON.parse(raw) };
   } catch { /* storage unavailable */ }
-  return { baseUrl: 'https://openrouter.ai/api/v1', apiKey: '', model: 'deepseek/deepseek-v4.1-flash' };
+  return { ...DEFAULTS };
 }
 
 export function saveSettings(s: AISettings) {
   try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch { /* ignore */ }
+  health = null;
 }
 
-let serverAI: boolean | null = null;
+const serverBase = (s: AISettings) => {
+  const url = (s.serverUrl || DEFAULT_SERVER).trim();
+  return url ? `${url.replace(/\/$/, '')}/` : '';
+};
 
-/** True when the bundled Python server is running with a key configured. */
-export async function serverHasAI(): Promise<boolean> {
-  if (serverAI !== null) return serverAI;
+let health: { base: string; ok: boolean; model?: string; at: number } | null = null;
+
+/** Is a Harry Plotter server with AI reachable? Cached for a minute; 2.5 s timeout so a switched-off server costs nothing. */
+export async function serverHasAI(force = false): Promise<boolean> {
+  const base = serverBase(loadSettings());
+  if (!force && health && health.base === base && Date.now() - health.at < 60_000) return health.ok;
+  let ok = false, model: string | undefined;
   try {
-    const r = await fetch('api/health', { cache: 'no-store' });
-    serverAI = r.ok && (await r.json()).ai === true;
-  } catch { serverAI = false; }
-  return serverAI;
+    const r = await fetch(`${base}api/health`, { cache: 'no-store', signal: AbortSignal.timeout(2500) });
+    const j = r.ok ? await r.json() : null;
+    ok = j?.ai === true;
+    model = j?.model ?? undefined;
+  } catch { ok = false; }
+  health = { base, ok, model, at: Date.now() };
+  return ok;
+}
+
+export interface AISource { kind: 'server' | 'key' | 'local' | 'none'; label: string; detail?: string }
+
+/** Which AI the next request will use. */
+export async function aiSource(): Promise<AISource> {
+  const s = loadSettings();
+  if (s.mode === 'off') return { kind: 'none', label: 'AI off' };
+  if ((s.mode === 'auto' || s.mode === 'server') && (await serverHasAI())) {
+    return { kind: 'server', label: 'Harry server', detail: health?.model };
+  }
+  if (s.mode === 'server') return { kind: 'none', label: 'Server unreachable' };
+  if ((s.mode === 'auto' || s.mode === 'key') && s.apiKey) return { kind: 'key', label: 'Your key', detail: s.model };
+  if (s.mode === 'local' && s.localUrl) return { kind: 'local', label: 'Local model', detail: s.localModel };
+  return { kind: 'none', label: 'Offline' };
+}
+
+/** Can this browser reach the local model? (Fails when it is not running or blocks this site via CORS.) */
+export async function testLocal(s: AISettings): Promise<string | null> {
+  try {
+    const r = await fetch(`${s.localUrl.replace(/\/$/, '')}/models`, { signal: AbortSignal.timeout(2500) });
+    return r.ok ? null : `answered ${r.status}`;
+  } catch {
+    return 'not reachable: not running, or not allowing this site (CORS)';
+  }
 }
 
 export async function aiAvailable(): Promise<boolean> {
-  return (await serverHasAI()) || !!loadSettings().apiKey;
+  return (await aiSource()).kind !== 'none';
 }
 
 function systemPrompt(dataset: Dataset): string {
@@ -129,22 +192,41 @@ type Message = { role: string; content: string | unknown[] };
 
 /** One chat completion through the local server (key stays there) or straight from the browser. */
 async function chat(kind: string, messages: Message[]): Promise<string> {
+  const s = loadSettings();
+  const source = await aiSource();
   let body: any;
-  if (await serverHasAI()) {
-    const r = await fetch('api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages }) });
+  if (source.kind === 'server') {
+    const r = await fetch(`${serverBase(s)}api/ai`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages }) });
     body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(body.error ?? `AI server error ${r.status}`);
-  } else {
-    const s = loadSettings();
-    if (!s.apiKey) throw new Error('No AI configured. Open settings to add an API key, or use the controls and ⌘K.');
-    const r = await fetch(`${s.baseUrl.replace(/\/$/, '')}/chat/completions`, {
+    if (!r.ok) {
+      health = null; // the server may have just gone away: look again next time
+      throw new Error(body.error ?? `AI server error ${r.status}`);
+    }
+  } else if (source.kind === 'key' || source.kind === 'local') {
+    const local = source.kind === 'local';
+    const url = `${(local ? s.localUrl : s.baseUrl).replace(/\/$/, '')}/chat/completions`;
+    const call = (json: boolean) => fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.apiKey}` },
-      body: JSON.stringify({ model: s.model, messages, temperature: 0.2, response_format: { type: 'json_object' } }),
+      headers: { 'Content-Type': 'application/json', ...(local ? {} : { Authorization: `Bearer ${s.apiKey}` }) },
+      body: JSON.stringify({ model: local ? s.localModel : s.model, messages, temperature: 0.2, ...(json ? { response_format: { type: 'json_object' } } : {}) }),
     });
+    let r: Response;
+    try {
+      r = await call(true);
+      // some local servers reject response_format: retry once without it (the prompt still asks for JSON)
+      if (r.status === 400 || r.status === 422) r = await call(false);
+    } catch {
+      throw new Error(local
+        ? `Cannot reach the local model at ${s.localUrl}. Is it running, and does it allow this site (CORS)? See Settings.`
+        : `Cannot reach ${s.baseUrl}. Check the address and your connection.`);
+    }
     const raw = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(raw.error?.message ?? `AI request failed (${r.status})`);
-    body = { content: raw.choices?.[0]?.message?.content ?? '', usage: raw.usage, model: raw.model ?? s.model };
+    if (!r.ok) throw new Error(raw.error?.message ?? raw.error ?? `AI request failed (${r.status})`);
+    body = { content: raw.choices?.[0]?.message?.content ?? '', usage: raw.usage, model: raw.model ?? (local ? s.localModel : s.model) };
+  } else {
+    throw new Error(source.label === 'AI off'
+      ? 'AI is switched off in Settings.'
+      : 'No AI connected. Open Settings to use your own key or a local model, or keep using the controls and ⌘K.');
   }
   if (body.usage) usageLog.push({ kind, prompt: body.usage.prompt_tokens ?? 0, completion: body.usage.completion_tokens ?? 0, model: body.model ?? '' });
   return body.content ?? '';

@@ -1,6 +1,6 @@
 import { ArrowUp, Loader2, Undo2, Wand2, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { aiAvailable, askAI } from '../lib/ai';
+import { aiSource, askAI, type AISource } from '../lib/ai';
 import { quickIntent } from '../lib/commands';
 import { useStore } from '../store';
 
@@ -11,12 +11,13 @@ export function PromptBar() {
   const set = useStore((s) => s.set);
   const undo = useStore((s) => s.undo);
   const [text, setText] = useState('');
-  const [hasAI, setHasAI] = useState<boolean | null>(null);
+  const [source, setSource] = useState<AISource | null>(null);
+  const hasAI = !!source && source.kind !== 'none';
   const [showReply, setShowReply] = useState(false);
   const input = useRef<HTMLTextAreaElement>(null);
   const settingsOpen = useStore((s) => s.settingsOpen);
 
-  useEffect(() => { aiAvailable().then(setHasAI); }, [settingsOpen]);
+  useEffect(() => { aiSource().then(setSource); }, [settingsOpen, busy]);
 
   const examples = useMemo(() => {
     const num = dataset.columns.filter((c) => c.type === 'number' && c.unique > 8);
@@ -101,7 +102,7 @@ export function PromptBar() {
           }}
           disabled={busy}
         />
-        <span className={`ai-badge ${hasAI ? 'on' : ''}`} title={hasAI ? 'AI connected' : 'Offline mode: understands short commands. Add a key in Settings for full AI.'}>{hasAI ? 'AI' : 'offline'}</span>
+        <button type="button" className={`ai-badge ${hasAI ? 'on' : ''}`} onClick={() => set({ settingsOpen: true })} title={hasAI ? `AI: ${source?.label}${source?.detail ? ` (${source.detail})` : ''}` : 'Offline: short commands still work. Click to connect an AI.'}>{hasAI ? (source!.kind === 'server' ? 'AI' : source!.kind === 'key' ? 'AI · key' : 'AI · local') : 'offline'}</button>
         <button type="submit" className="send" disabled={busy || !text.trim()} aria-label="Send">
           {busy ? <Loader2 size={16} className="spin" /> : <ArrowUp size={16} />}
         </button>

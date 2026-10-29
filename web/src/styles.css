@@ -461,3 +461,14 @@ tr:hover td { background: var(--panel-2); }
 .color-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .color-row code { font-size: 11px; color: var(--muted); }
 .color-row .icon-btn { width: 22px; height: 22px; font-size: 15px; }
+
+.ai-status { display: flex; align-items: center; gap: 7px; margin: 0; padding: 8px 10px; border-radius: 7px; font-size: 12.5px; }
+.ai-status.on { background: var(--ok-soft); color: var(--ok); }
+.ai-status.off { background: var(--panel-2); color: var(--muted); }
+.ai-status b { font-weight: 600; }
+.hint-box { font-size: 12px; line-height: 1.5; padding: 10px 12px; border-radius: 7px; background: var(--warn-soft); color: var(--ink-2); }
+.hint-box ul { margin: 6px 0; padding-left: 18px; }
+.hint-box code { font-size: 11px; word-break: break-all; }
+.privacy { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.privacy summary { cursor: pointer; font-weight: 550; color: var(--ink-2); }
+button.ai-badge { cursor: pointer; }

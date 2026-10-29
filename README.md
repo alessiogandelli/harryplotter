@@ -95,6 +95,60 @@ deterministic half of Improve, ⌘K and the offline phrases cost nothing.
 The editor also works as a plain static site (GitHub Pages, a file share). In that
 case the AI key is entered in Settings and stays in the browser.
 
+## Hosting
+
+The editor is a static site; the Python server is optional and only adds the AI proxy
+(and file hand-over for `hp.plot`). Three ways to run it:
+
+**1. Hosted editor on Cloudflare Pages, with an optional backend**
+
+```bash
+cd web
+VITE_HP_SERVER=https://api.your-domain.org npm run build      # where your backend will live
+npx wrangler pages deploy ../python/harryplotter/static --project-name harryplotter
+```
+
+Run the backend wherever you like (a server, or your own machine behind a Cloudflare Tunnel;
+it must be reachable over https):
+
+```bash
+OPENROUTER_API_KEY=... harryplotter --host 0.0.0.0 --no-browser \
+  --allow-origin https://harryplotter.pages.dev --daily-limit 100
+```
+
+- Backend **on**: the editor finds it at start-up and uses it; your key never reaches browsers.
+- Backend **off**: the editor notices within 2.5 s and falls back to what each researcher set in
+  Settings: their own key (OpenRouter, OpenAI…, called straight from the browser), a model on
+  their computer, or no AI. Every non-AI feature always works.
+- `--allow-origin` is CORS: it lets the hosted page call the server. It is **not** access
+  control — anyone who knows the URL can call it — so use a dedicated OpenRouter key with a
+  monthly credit limit, and `--daily-limit` (requests per client IP per day; behind Cloudflare
+  the real IP is taken from `CF-Connecting-IP`).
+
+**Local models from the hosted editor.** The page is on another origin, so the model server
+must allow it: Ollama `OLLAMA_ORIGINS=https://harryplotter.pages.dev ollama serve`; LM Studio
+→ enable CORS; llama.cpp's `llama-server` already allows it. Chrome/Edge may ask permission to
+reach the local network. Safari may block https → `http://localhost`; there, run Harry locally.
+Settings → *Test* checks the connection.
+
+**2. Everything on your machine**
+
+```bash
+pip install git+https://github.com/alessiogandelli/harryplotter
+harryplotter data.csv            # or hp.plot(df) in Jupyter
+```
+
+**3. Self-hosted for a lab (Docker)**
+
+```bash
+docker build -t harryplotter .
+docker run -p 8765:8765 -e OPENROUTER_API_KEY=... -e HARRYPLOTTER_DAILY_LIMIT=200 harryplotter
+```
+
+**What the AI sees.** Column names, up to 8 example values per column, summary statistics
+and the figure settings; for *Improve*, a picture of the figure. Never the rows. Settings →
+*Off* disables AI entirely.
+
 ## Chart types
 
 Scatter · Line · Area · Bar · Histogram · Density · Box · Violin · Dots (jitter +
