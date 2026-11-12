@@ -41,7 +41,26 @@ const usedColumns = (spec: Spec) => Object.values(spec.enc).filter(Boolean) as s
 
 const PY_ERR: Record<string, string> = { none: 'None', sd: '"sd"', se: '"se"', ci95: '("ci", 95)' };
 const PY_BIN: Record<string, string> = { day: 'D', week: 'W', month: 'M', quarter: 'Q', year: 'Y' };
-const PY_CMAP: Record<string, string> = { viridis: 'viridis', cividis: 'cividis', magma: 'magma', blues: 'Blues' };
+const PY_CMAP: Record<string, string> = {
+  viridis: 'viridis', cividis: 'cividis', magma: 'magma', plasma: 'plasma', inferno: 'inferno', turbo: 'turbo', cubehelix: 'cubehelix',
+  warm: 'spring', cool: 'cool', blues: 'Blues', greens: 'Greens', reds: 'Reds', oranges: 'Oranges', purples: 'Purples', greys: 'Greys',
+  ylgnbu: 'YlGnBu', ylorrd: 'YlOrRd',
+  // diverging: cold colour on the low end, as in the editor
+  rdbu: 'RdBu_r', spectral: 'Spectral_r', rdylbu: 'RdYlBu_r', rdylgn: 'RdYlGn_r', rdgy: 'RdGy_r', piyg: 'PiYG_r', prgn: 'PRGn_r', brbg: 'BrBG_r', puor: 'PuOr_r',
+};
+const R_VIRIDIS: Record<string, string> = { viridis: 'D', cividis: 'E', magma: 'A', inferno: 'B', plasma: 'C', turbo: 'H' };
+const R_BREWER: Record<string, [string, number]> = {
+  blues: ['Blues', 1], greens: ['Greens', 1], reds: ['Reds', 1], oranges: ['Oranges', 1], purples: ['Purples', 1], greys: ['Greys', 1],
+  ylgnbu: ['YlGnBu', 1], ylorrd: ['YlOrRd', 1],
+  rdbu: ['RdBu', -1], spectral: ['Spectral', -1], rdylbu: ['RdYlBu', -1], rdylgn: ['RdYlGn', -1], rdgy: ['RdGy', -1], piyg: ['PiYG', -1], prgn: ['PRGn', -1], brbg: ['BrBG', -1], puor: ['PuOr', -1],
+};
+/** ggplot2 continuous scale matching the editor's palette. */
+function rContinuous(aes: 'fill' | 'colour', palette: string): string {
+  const sch = sequentialScheme(palette);
+  const b = R_BREWER[sch];
+  if (b) return `scale_${aes}_distiller(palette = "${b[0]}", direction = ${b[1]})`;
+  return `scale_${aes}_viridis_c(option = "${R_VIRIDIS[sch] ?? 'D'}")`;
+}
 
 export function toPython(spec: Spec, dataset: Dataset, file = `${dataset.name}.csv`): string {
   const st = spec.style;
@@ -326,7 +345,7 @@ export function toR(spec: Spec, dataset: Dataset, file = `${dataset.name}.csv`):
       base = `ggplot(cells, aes(x = factor(${rn(x!)}), y = factor(${rn(y!)}), fill = value))`;
       geoms.push('geom_tile(colour = "white", linewidth = 0.4)');
       if (spec.stats.labels) geoms.push(`geom_text(aes(label = signif(value, 3)), size = ${r1(st.fontSize * 0.3)})`);
-      geoms.push(`scale_fill_viridis_c(option = ${q({ viridis: 'D', cividis: 'E', magma: 'A', blues: 'G' }[sequentialScheme(st.palette)] ?? 'D')})`);
+      geoms.push(rContinuous('fill', st.palette));
       break;
     }
     case 'corr':
@@ -349,7 +368,7 @@ export function toR(spec: Spec, dataset: Dataset, file = `${dataset.name}.csv`):
     geoms.push(`scale_${usesFill ? 'fill' : 'colour'}_manual(values = palette)`);
     if (spec.mark === 'line' && spec.stats.error !== 'none') geoms.push('scale_fill_manual(values = palette, guide = "none")');
   }
-  if (hueNumeric) geoms.push(`scale_colour_viridis_c(option = ${q({ viridis: 'D', cividis: 'E', magma: 'A', blues: 'G' }[sequentialScheme(st.palette)] ?? 'D')})`);
+  if (hueNumeric) geoms.push(rContinuous('colour', st.palette));
   if (st.xScale === 'log') geoms.push('scale_x_log10()'); else if (st.xScale === 'sqrt') geoms.push('scale_x_sqrt()');
   if (st.yScale === 'log') geoms.push('scale_y_log10()'); else if (st.yScale === 'sqrt') geoms.push('scale_y_sqrt()');
   if (st.xMin !== null || st.xMax !== null || st.yMin !== null || st.yMax !== null) {

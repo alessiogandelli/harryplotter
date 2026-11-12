@@ -322,6 +322,11 @@ interface Layout {
   /** tick labels of the x axis (for margin estimates) */
   xTickLabels?: string[];
   yTickLabels?: string[];
+  /** every level of a discrete axis; buildPlot picks the ones that fit and sets the ticks */
+  xDiscrete?: string[];
+  yDiscrete?: string[];
+  /** tick value for a level when the scale is not keyed by the label itself (e.g. index positions) */
+  xTickValue?: (label: string) => unknown;
   gridX?: boolean;
 }
 
@@ -351,21 +356,36 @@ function buildPlot(ctx: Ctx, dataset: Dataset, width: number, height: number): S
   const tickSize = st.theme === 'minimal' ? 0 : 4;
   const tickPad = Math.round(fontPx * 0.35);
   const tickPx = fontPx * 0.92;
-  const yTicks = layout.yTickLabels ?? guessTicks(ctx, 'y', layout);
-  const yTickW = Math.max(0, ...yTicks.map((t) => textWidth(t, tickPx, font)));
-  const marginLeft = Math.ceil(yTickW + tickSize + tickPad + (yLabel ? fontPx * 1.9 : fontPx * 0.6) + 2);
-
-  const xTicks = layout.xTickLabels ?? [];
-  const nx = Math.max(1, xTicks.length);
-  const maxXTick = Math.max(0, ...xTicks.map((t) => textWidth(t, tickPx, font)));
+  const measure = (t: string) => textWidth(t, tickPx, font);
+  const marginTop = Math.ceil((facetX ? fontPx * 1.9 : 0) + fontPx * 0.8);
+  const marginRight = Math.ceil(facetY ? fontPx * 2.2 : fontPx * 1.2);
   const facetCount = facetX ? levels(ctx.rows, facetX).length : 1;
-  const slot = (width - marginLeft) / facetCount / nx;
-  const rotate = st.xTickAngle !== null ? -st.xTickAngle : xTicks.length > 0 && maxXTick > slot * 0.92 ? -35 : 0;
+  const facetRows = facetY ? levels(ctx.rows, facetY).length : 1;
+
+  // long category names are shortened with an ellipsis instead of eating the plot
+  const yShort = layout.yDiscrete ? shortenAll(layout.yDiscrete, Math.max(tickPx * 6, width * 0.3), measure) : null;
+  const yTicks = yShort ? [...yShort.values()] : layout.yTickLabels ?? guessTicks(ctx, 'y', layout);
+  const yTickW = Math.max(0, ...yTicks.map(measure));
+  const marginLeft = Math.ceil(yTickW + tickSize + tickPad + (yLabel ? fontPx * 1.9 : fontPx * 0.6) + 2);
+  const panelW = Math.max(20, (width - marginLeft - marginRight) / facetCount * (facetX ? 0.92 : 1));
+
+  let xFit: TickFit | null = null;
+  let xShort: Map<string, string> | null = null;
+  if (layout.xDiscrete) {
+    xShort = shortenAll(layout.xDiscrete, Math.max(tickPx * 6, height * 0.32), measure);
+    xFit = fitTicks(layout.xDiscrete, panelW, { lineH: tickPx, gap: tickPx * 0.8, widthOf: (t) => measure(xShort!.get(t) ?? t), angle: st.xTickAngle });
+  }
+  const xTicks = xFit ? xFit.shown.map((t) => xShort!.get(t) ?? t) : layout.xTickLabels ?? [];
+  const nx = Math.max(1, xTicks.length);
+  const maxXTick = Math.max(0, ...xTicks.map(measure));
+  const slot = panelW / nx;
+  const rotate = xFit ? -xFit.angle : st.xTickAngle !== null ? -st.xTickAngle : xTicks.length > 0 && maxXTick > slot * 0.92 ? -35 : 0;
   const longest = xTicks.length ? maxXTick : textWidth('00000', tickPx, font);
   const xTickH = rotate ? longest * Math.sin(Math.PI / 180 * -rotate) + tickPx * Math.cos(Math.PI / 180 * -rotate) * 0.9 + tickPx * 0.2 : tickPx * 1.15;
   const marginBottom = Math.ceil(tickSize + tickPad + xTickH + (xLabel ? fontPx * 1.75 : fontPx * 0.4));
-  const marginTop = Math.ceil((facetX ? fontPx * 1.9 : 0) + fontPx * 0.8);
-  const marginRight = Math.ceil(facetY ? fontPx * 2.2 : fontPx * 1.2);
+
+  const panelH = Math.max(20, (height - marginTop - marginBottom) / facetRows * (facetY ? 0.9 : 1));
+  const yFit = layout.yDiscrete ? fitTicks(layout.yDiscrete, panelH, { lineH: tickPx, gap: tickPx * 0.15, widthOf: () => 0, angle: null, vertical: true }) : null;
 
   const marks: Mark[] = [];
   // grid first so it sits under the data
@@ -403,12 +423,33 @@ function buildPlot(ctx: Ctx, dataset: Dataset, width: number, height: number): S
     tickRotate: rotate,
     ...(layout.x ?? {}),
   };
+  if (xFit && xShort) {
+    const toTick = layout.xTickValue ?? ((l: string) => l);
+    x.ticks = xFit.shown.map(toTick) as any;
+    const base = (layout.x?.tickFormat as ((v: unknown) => string) | undefined) ?? ((v: unknown) => String(v));
+    const short = xShort;
+    x.tickFormat = (v: unknown) => { const t = base(v); return short.get(t) ?? t; };
+  } else if (!layout.x?.ticks && (layout.x?.type === undefined || layout.x?.type === 'linear') && st.xTickAngle === null) {
+    // continuous x: as many round-number ticks as the widest label allows, never more than Plot's own default density would cramp
+    const xCol = spec.enc.x;
+    const dom = (x.domain as number[] | undefined) ?? (xCol ? (d3.extent(ctx.rows, (r) => r[xCol] as number) as [number, number]) : undefined);
+    if (dom && typeof dom[0] === 'number' && typeof dom[1] === 'number' && dom[0] !== dom[1] && !(ctx.rows[0]?.[xCol!] instanceof Date)) {
+      const n = continuousTickCount(dom as [number, number], panelW, measure, tickPx * 1.6);
+      if (n) x.ticks = n;
+    }
+  }
+
   const y: Plot.ScaleOptions = {
     ...axisCommon,
     label: yLabel || null,
     labelOffset: marginLeft - fontPx * 0.35,
     ...(layout.y ?? {}),
   };
+  if (yFit && yShort) {
+    y.ticks = yFit.shown as any;
+    const short = yShort;
+    y.tickFormat = (v: unknown) => short.get(String(v)) ?? String(v);
+  }
   if (st.xMin !== null || st.xMax !== null) {
     if (layout.x?.type !== 'point' && layout.x?.type !== 'band') {
       x.domain = [st.xMin ?? (x.domain as number[] | undefined)?.[0] ?? (d3.min(ctx.rows, (r) => r[spec.enc.x!] as number) as number),
@@ -571,6 +612,8 @@ function scatter(ctx: Ctx, dataset: Dataset): Layout {
     r: size ? { type: 'sqrt', domain: d3.extent(ctx.rows, (r) => r[size] as number) as [number, number], range: [st.markSize * 0.5, st.markSize * 2.4] } : undefined,
     xLabel: prettify(x),
     yLabel: prettify(y),
+    xDiscrete: xCat ? levels(ctx.rows, x!) : undefined,
+    yDiscrete: yCat ? levels(ctx.rows, y!) : undefined,
   };
 }
 
@@ -671,6 +714,7 @@ function lineArea(ctx: Ctx, dataset: Dataset): Layout {
     color: colorChannel(ctx),
     xLabel: prettify(x),
     yLabel: aggLabel(agg, y, err),
+    xDiscrete: order ?? undefined,
     gridX: !order,
   };
 }
@@ -918,7 +962,6 @@ function categorical(ctx: Ctx, dataset: Dataset): Layout {
     marks,
     x: {
       domain: [-0.6, cats.length - 0.4],
-      ticks: thin(cats, 40).map((c) => cats.indexOf(c)),
       tickFormat: (i: number) => (Number.isInteger(i) ? cats[i] ?? '' : ''),
       axis: x ? 'bottom' : null,
     },
@@ -926,7 +969,8 @@ function categorical(ctx: Ctx, dataset: Dataset): Layout {
     color: undefined,
     xLabel: x ? prettify(x) : '',
     yLabel,
-    xTickLabels: thin(cats, 40),
+    xDiscrete: x ? cats : undefined,
+    xTickValue: (c: string) => cats.indexOf(c),
     gridX: false,
   };
 }
@@ -1048,13 +1092,13 @@ function heatmap(ctx: Ctx, dataset: Dataset): Layout {
   }
   return {
     marks,
-    x: { type: 'band', domain: xs, tickSize: 0, ticks: thin(xs) } as any,
-    y: { type: 'band', domain: ys, tickSize: 0, ticks: thin(ys, 30) } as any,
+    x: { type: 'band', domain: xs, tickSize: 0 } as any,
+    y: { type: 'band', domain: ys, tickSize: 0 } as any,
     color: colorScale as Plot.ScaleOptions,
     xLabel: prettify(x),
     yLabel: prettify(y),
-    xTickLabels: thin(xs),
-    yTickLabels: thin(ys, 30),
+    xDiscrete: xs,
+    yDiscrete: ys,
     gridX: false,
   };
 }
@@ -1088,7 +1132,69 @@ function heatmapValueLabel(spec: Spec) {
   return agg === 'count' ? 'Count' : `${AGG_LABEL[agg]} ${lowerFirst(prettify(c))}`;
 }
 
-/** Every k-th label once there are too many to read; round numbers when the labels are years or doses. */
+export interface TickFit { shown: string[]; angle: number }
+
+/**
+ * Which labels of a discrete axis to show, and at what angle, so that none overlap in the space there is.
+ * Every label is kept whenever it fits — flat first, then tilted, then upright; only when even upright
+ * labels would collide is the axis thinned, and then just as much as the space demands.
+ */
+export function fitTicks(
+  labels: string[], length: number,
+  o: { lineH: number; gap: number; widthOf: (t: string) => number; angle: number | null; vertical?: boolean },
+): TickFit {
+  const n = labels.length;
+  if (!n) return { shown: [], angle: 0 };
+  const slot = length / n;
+  if (o.vertical) {
+    const need = o.lineH * 1.05 + o.gap;
+    return { shown: slot >= need ? labels : thin(labels, Math.max(2, Math.floor(length / need))), angle: 0 };
+  }
+  const maxW = Math.max(0, ...labels.map(o.widthOf));
+  const needAt = (deg: number) => {
+    if (deg === 0) return maxW + o.gap;
+    const r = (Math.PI / 180) * Math.abs(deg);
+    // tilted labels are parallel strips: they clear each other once their perpendicular spacing beats the text height
+    return Math.min(o.lineH * 1.1 / Math.sin(r), maxW * Math.cos(r) + o.gap);
+  };
+  const angles = o.angle !== null ? [o.angle] : [0, 35, 90];
+  for (const a of angles) if (slot >= needAt(a)) return { shown: labels, angle: a };
+  const a = angles[angles.length - 1];
+  return { shown: thin(labels, Math.max(2, Math.floor(length / needAt(a)))), angle: a };
+}
+
+/**
+ * Labels wider than maxW, cut down with an ellipsis; returns full → shown.
+ * Cut at the end ("Treatment gr…"), or in the middle ("Sam…le 12") when cutting the end would make names collide.
+ */
+export function shortenAll(labels: string[], maxW: number, widthOf: (t: string) => number): Map<string, string> {
+  const uniq = [...new Set(labels)];
+  const cut = (l: string, middle: boolean) => {
+    if (widthOf(l) <= maxW) return l;
+    const make = (k: number) => (middle ? `${l.slice(0, Math.ceil(k / 2)).trimEnd()}…${l.slice(l.length - Math.floor(k / 2)).trimStart()}` : `${l.slice(0, k).trimEnd()}…`);
+    let lo = 1, hi = l.length - 1;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (widthOf(make(mid)) <= maxW) lo = mid; else hi = mid - 1; }
+    return make(lo);
+  };
+  let shown = uniq.map((l) => cut(l, false));
+  if (new Set(shown).size < uniq.length) shown = uniq.map((l) => cut(l, true));
+  return new Map(uniq.map((l, i) => [l, shown[i]]));
+}
+
+/** How many round-number ticks a continuous axis of this length can carry without the labels touching. */
+export function continuousTickCount(dom: [number, number], length: number, widthOf: (t: string) => number, gap: number): number | null {
+  const s = d3.scaleLinear().domain(dom).nice();
+  // no denser than one tick per ~55px: more labels than that reads as clutter, not information
+  for (let n = Math.max(2, Math.min(12, Math.floor(length / 55))); n >= 2; n--) {
+    const ticks = s.ticks(n);
+    const f = s.tickFormat(n);
+    const w = Math.max(0, ...ticks.map((t) => widthOf(f(t))));
+    if (ticks.length * (w + gap) <= length) return n;
+  }
+  return null;
+}
+
+/** Every k-th label once there are more than max; round numbers when the labels are years or doses. */
 export function thin(labels: string[], max = 16): string[] {
   if (labels.length <= max) return labels;
   const nums = labels.map(Number);
@@ -1103,8 +1209,10 @@ export function thin(labels: string[], max = 16): string[] {
 }
 
 function labelInk(scheme: string, ext: [number, number], v: number, reversed = false) {
-  const name = `interpolate${scheme.charAt(0).toUpperCase()}${scheme.slice(1)}`;
-  const interp = (d3 as any)[name] ?? d3.interpolateViridis;
+  // d3 names mix case (interpolateRdBu, interpolateYlGnBu); match case-insensitively
+  const want = `interpolate${scheme}`.toLowerCase();
+  const name = scheme === 'cubehelix' ? 'interpolateCubehelixDefault' : Object.keys(d3).find((k) => k.toLowerCase() === want);
+  const interp = (name && (d3 as any)[name]) || d3.interpolateViridis;
   let t = ext[1] === ext[0] ? 0.5 : (v - ext[0]) / (ext[1] - ext[0]);
   if (reversed) t = 1 - t;
   const c = d3.rgb(interp(t));
@@ -1141,8 +1249,8 @@ function corr(ctx: Ctx, dataset: Dataset): Layout {
     color: { type: 'linear', scheme: 'rdbu' as any, domain: [-1, 1] },
     xLabel: '',
     yLabel: '',
-    xTickLabels: names,
-    yTickLabels: names,
+    xDiscrete: names,
+    yDiscrete: names,
     gridX: false,
   };
 }

@@ -167,8 +167,18 @@ export function quickIntent(text: string, spec: Spec, dataset: Dataset): { spec:
       break;
     }
   }
-  for (const p of PALETTES) if (t.includes(p.label.toLowerCase()) || t.includes(p.id)) { s.style.palette = p.id; said.push(`${p.label} palette`); break; }
-  if (/colou?r.?blind|daltonic/.test(t)) { s.style.palette = 'okabe-ito'; said.push('colour-blind palette'); }
+  let namedPalette = false;
+  {
+    // whole words only, longest name first; everyday words ("paired" t-test, "cool") count only next to "palette"/"colours"
+    const esc = (w: string) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const says = (w: string) => new RegExp(`(^|[^a-z0-9])${esc(w)}($|[^a-z0-9])`).test(t);
+    const ambiguous = new Set(['paired', 'accent', 'cool', 'warm', 'reds', 'greens', 'oranges', 'purples', 'greys', 'blues', 'soft', 'pastel', 'turbo']);
+    const aboutColour = /palette|colou?rs?\b|colori|tavolozza/.test(t);
+    const names = PALETTES.flatMap((p) => [p.label.toLowerCase(), p.id].map((n) => ({ n, p }))).sort((a, b) => b.n.length - a.n.length);
+    const hit = names.find(({ n }) => says(n) && (aboutColour || !ambiguous.has(n)));
+    if (hit) { s.style.palette = hit.p.id; said.push(`${hit.p.label} palette`); namedPalette = true; }
+  }
+  if (!namedPalette && /colou?r.?blind|daltonic/.test(t)) { s.style.palette = 'okabe-ito'; said.push('colour-blind palette'); }
   if (/\b(gr[ae]yscale|black and white|bianco e nero|b\/w)\b/.test(t)) { s.style.palette = 'grayscale'; said.push('grayscale'); }
   if (/\b(dark|scuro)\b/.test(t)) { s.style.theme = 'dark'; said.push('dark theme'); }
   if (/\bclassic|boxed|frame\b/.test(t)) { s.style.theme = 'classic'; said.push('classic theme'); }
